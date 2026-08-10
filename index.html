@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
-  <title>Upload Foto Santri - SMP IT Putra Abu Hurairah Mataram</title>
+  <title>Upload Foto Santri - SMP Islam Terpadu Putra Abu Hurairah Mataram</title>
   
   <!-- FontAwesome & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -208,6 +208,80 @@
       display: block;
     }
 
+    /* Fullscreen Camera Mode Styling */
+    .camera-container.fullscreen-mode {
+      position: fixed !important;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+      border-radius: 0;
+      border: none;
+      aspect-ratio: unset;
+    }
+
+    .camera-container.fullscreen-mode video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Floating Capture & Close Buttons inside Fullscreen */
+    .fs-controls {
+      display: none;
+      position: fixed;
+      bottom: 30px;
+      left: 0;
+      width: 100%;
+      justify-content: center;
+      gap: 20px;
+      z-index: 10000;
+      padding: 0 20px;
+    }
+
+    .camera-container.fullscreen-mode + .fs-controls,
+    .fs-controls.active {
+      display: flex;
+    }
+
+    .btn-fs-capture {
+      background: #ffffff;
+      color: var(--text-dark);
+      border-radius: 50%;
+      width: 70px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      cursor: pointer;
+      border: 4px solid rgba(255,255,255,0.8);
+    }
+
+    .btn-fs-close {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      z-index: 10000;
+      cursor: pointer;
+    }
+    
+    .camera-container.fullscreen-mode ~ .btn-fs-close {
+      display: flex;
+    }
+
     /* Buttons */
     .btn {
       width: 100%;
@@ -293,12 +367,18 @@
     <!-- Area Kamera Live -->
     <div id="cameraArea" class="camera-section">
       <label><i class="fas fa-video"></i> Kamera Perangkat</label>
-      <div class="camera-container">
+      <div class="camera-container" id="cameraContainerBox">
         <video id="videoElement" autoplay playsinline></video>
       </div>
       <button class="btn btn-secondary" id="captureBtn">
-        <i class="fas fa-camera"></i> Jepret Foto
+        <i class="fas fa-camera"></i> Buka Kamera Fullscreen & Jepret
       </button>
+    </div>
+
+    <!-- Tombol Tutup & Kontrol Fullscreen Tambahan -->
+    <button class="btn-fs-close" id="closeFsBtn"><i class="fas fa-times"></i></button>
+    <div class="fs-controls" id="fsControls">
+      <button class="btn-fs-capture" id="fsCaptureBtn"><i class="fas fa-camera"></i></button>
     </div>
 
     <!-- Area Pratinjau Hasil Jepretan -->
@@ -332,7 +412,7 @@
 
   // Daftar santri yang dikelompokkan berdasarkan kelas
   const DATA_SANTRI = {
-        "7A": ["ABDULLAH RASYIQUL AKRAM", "ABDUROHMAN KHOLIL", "ABDURROZZAQ", "ADRIAN FACHRY AS'ARY", "ALBY FACHRIE", "ALIF ZIYAD ZAEN", "ATHAR RIZKY YUDHISTIRA", "AUFA AL HAMIDI", "BINTANG JULIANT ALFARABI", "FADHIL NASHIR ALBANI", "FAIZ ARFAN HAIKAL", "FAYADH ELFATA", "HADZUKI ADITYA RAMADHAN", "HAFIDS AL GHAZALI", "HARITS ARKAAN", "HUSAIN ANAKI", "LALU IQRA ILYAS", "M. GHAISAN INDIKA HILMY", "MU'ADZ", "MUH. GHAFAR ARIEF SETIOBUDI", "MUHAMMAD ADIB", "MUHAMMAD AL FAIZ", "MUHAMMAD ALFIAN RIZQI", "MUHAMMAD AQIL", "MUHAMMAD AQIL ALMAIR RAMADHAN", "MUHAMMAD NAYAKA HAKAM", "MUHAMMAD TRISTAN ALIEF PRABOWO", "MUHAMMAD ZAKY AL HAFIZH FAUZAN", "NADYANDA MUCHALI AL MAJIID", "RESKI ARSY NEGARA", "SULTAN FAIZULLAH ATMIJOYO", "SYABANIN ALKAUTSAR IRAWAN", "SYAFIIQ AL-ATSARI", "UKASYAH ABDURROHMAN", "UWAIS", "YUSUF ABDURRAHMAN FANSURI"],
+        "7A": ["ABDULLAH RASYIQUL AKRAM", "ABDUROHMAN KHOLIL", "ABDURROZZAQ", "ADRIAN FACHRY AS'ARY", "ALBY FACHRIE", "ALIF ZIYAD ZAEN", "ATHAR RIZKY YUDHISTIRA", "AUFA AL HAMIDI", "BINTANG JULIANT ALFARABI", "FADHIL NASHIR ALBANI", "FAIZ ARFAN HAIKAL", "FAYADH ELFATA", "HADZUKI ADITYA RAMADHAN", "HAFIDS AL GHAZALI", "HARITS ARKAAN", "HUSAIN ANAKI", "LALU IQRA ILYAS", "M. GHAISAN INDIKA HILMY", "MU'ADZ", "MUH. GHAFAR ARIEF SETIOBUDI", "MUHAMMAD ADIB", "MUHAMMAD AL FAIZ", "MUHAMMAD ALFIAN RIZQI", "MUHAMMAD AQIL", "MUHAMMAD AQIL ALMAIR RAMADHAN", "MUHAMMAD NAYAKA HAKAM", "MUHAMMAD TRISTAN ALIEF PRABOWO", "MUHAMMAD ZYKY AL HAFIZH FAUZAN", "NADYANDA MUCHALI AL MAJIID", "RESKI ARSY NEGARA", "SULTAN FAIZULLAH ATMIJOYO", "SYABANIN ALKAUTSAR IRAWAN", "SYAFIIQ AL-ATSARI", "UKASYAH ABDURROHMAN", "UWAIS", "YUSUF ABDURRAHMAN FANSURI"],
         "7B": ["AHMAD KADHAFI BAFADHAL", "AHMAD QAIS ALHADI", "AKBAR MUHAMMAD FAISAL", "ALKA ZAHRAN SYAFIQ", "ANTO APANSA", "BISMA ABDILLAH SURA", "GIOFANDI AHNAF SYATIR", "IMRAN UMAR ALKATIRI", "JIKRAN ALFATIH MUDASIR", "KHANUKH MAHIR BAHASWAN", "LALU ABDURRAHMAN DZAKI KHAIRI", "LALU MUHAMMAD ISHAM HAWARI", "LALU TSAQIB AL MUHALY", "M. SHAFIQ MUBARAK", "M. SULTHAN HABIBULLAH", "M.IBAD FA'IQ ATHAR", "MIFZAL", "MUH.FAZRIL ILHAM", "MUHAMAD OZIL", "MUHAMMAD AIDIL GIFARI", "MUHAMMAD AKROM AL-FARUQ", "MUHAMMAD FAUZAN", "MUHAMMAD FAWWAZ ARRAYAN", "MUHAMMAD NABIIL SETIAWAN", "MUHAMMAD NAUFAL AL KHAIRY", "NAUFAL AL FAIZ", "PRANAJA AGHA SAFARAZ", "RADITYA NAUFAL ABIYYU", "RASYA MAULANA PRASETYO", "SAJID", "SYAFIQ ALBANY MUBARAK", "VIRZAN AL AZKA", "WAFI 'ABDULLOH", "YUSUF GIBRAN RAMADHAN", "ZAKI SALEH", "ZUBAIR AL FAYYAD"],
         "7C": ["ABBASHY RIZQILLAH JULIANGKARA", "ABIDULLAH IBRAHIM HANIF", "ABRISAM FAQIH ABBASY", "ADHWA ASHAAD KAMIDIA", "AFKAR HAFIDZUL FAYYAD", "AHMAD AL GHAZALI", "AHSAN ABDULLAH", "ALI ABDULLAH AL BAKRI", "AMIR MUJAHID", "ANAS MUTTAQIN", "BAYU SAFA BUDI OZORA", "DANIL ZAKY AL HANIF", "FADHIL JAMAL HIZAM", "FATHIN ABDULLAH", "FATIH ARDIANSYAH MALIK", "HAIRUL AZZAM", "HAFIZ PRATAMA DINTAHA", "ISAM AL KHUSYAIRI", "KEENAN DANIAL ALFAREZEL", "KHAERUL HADI JAELANI", "MU'ADZ RIFKI AL BAKRI", "MUH. SHOLYHIN", "MUHAMMAD ABDURRAHMAN ABBASYI", "MUHAMMAD DHAFFA DZAKI PUTRA SANI", "MUHAMMAD EMIRSYAH SYAWAL", "MUHAMMAD FADLILLAH", "MUHAMMAD FAIZI ATHAR AL AYYUBI", "MUHAMMAD ILYAS", "MUHAMMAD QOIS FIRDAUS", "MUHAMMAD RUSYDI THALIB", "MUHAMMAD YAZID ALI", "NIZAR", "PATIH MUHAMMAD", "ZAIM MUBARAK IBNU RASYID"],
         "7D": ["ABDURRAHMAN HALIM", "ABDURRAHMAN HANIF", "ABU DAFIF KHOLIS AR-ROTANIYY", "ADHITYA FATHAN NURRIZKILLAH", "AHMAD SULTAN NAZHIRUL ASROFI", "AINAN NEVAN INDRAJAYA", "ALBY RIEZKY RAMADHAN", "AMMAR", "DZAKY MAHESWARA", "FATHIAN AL AZZAM", "HAFUZA AGHANDHI ISPARWONO", "ILHAMY MUHAMMAD WAFI", "KHAIZURAN AZFARIL HAKIM", "KHALIL ABDUL JABBAR", "LALU MUHAMMAD FAWAAZ MUSTHOFA", "M. DHAFFA GIBRAN ARANTA", "M. HISYAM AL FATHIR", "M. SALMAN AZKAMIL", "M. AUFAR TRI IRZANI", "M. GIYAS AUFA", "MUHAMMAD AFIIF AL-HABSYI", "MUHAMMAD AHSAN ZAKI", "MUHAMMAD ALVIN FAIZ", "MUHAMMAD FALIH KASYFUL ISLAM", "MUHAMMAD FAQIH RIZQULLAH", "MUHAMMAD HAYYAN", "MUHAMMAD RAIHAN AL FATIH", "MUZAKKAR HALIM KHAIRI", "RAZA ARDYLAN AMIR", "SAMI", "SAMIR JAZLAN AL- HADI", "SULTAN MUHAMMAD ALFATI", "TIHAMI ABDUL MUZANNI A", "UBAIDURRAHMAN", "UMAR AL FARUQ"],
@@ -361,7 +441,10 @@
   const suggestionBox = document.getElementById('suggestionBox');
   const videoElement = document.getElementById('videoElement');
   const canvasElement = document.getElementById('canvasElement');
+  const cameraContainerBox = document.getElementById('cameraContainerBox');
   const captureBtn = document.getElementById('captureBtn');
+  const fsCaptureBtn = document.getElementById('fsCaptureBtn');
+  const closeFsBtn = document.getElementById('closeFsBtn');
   const retakeBtn = document.getElementById('retakeBtn');
   const cameraArea = document.getElementById('cameraArea');
   const previewArea = document.getElementById('previewArea');
@@ -384,7 +467,6 @@
     filtered.forEach(item => {
       const div = document.createElement('div');
       div.className = 'suggestion-item';
-      // Highlight matching text (Optional visual improvement)
       const regex = new RegExp(`(${query})`, "gi");
       div.innerHTML = item.replace(regex, "<strong>$1</strong>");
       
@@ -419,7 +501,18 @@
 
   window.addEventListener('load', startCamera);
 
+  // Buka mode Fullscreen saat tombol ditekan
   captureBtn.addEventListener('click', () => {
+    cameraContainerBox.classList.add('fullscreen-mode');
+  });
+
+  // Tutup mode Fullscreen tanpa ambil gambar
+  closeFsBtn.addEventListener('click', () => {
+    cameraContainerBox.classList.remove('fullscreen-mode');
+  });
+
+  // Fungsi Eksekusi Jepret Foto
+  function takeSnapshot() {
     canvasElement.width = videoElement.videoWidth;
     canvasElement.height = videoElement.videoHeight;
     const context = canvasElement.getContext('2d');
@@ -430,9 +523,17 @@
     imagePreview.src = dataUrl;
     base64PhotoData = dataUrl.split(',')[1];
     
+    // Keluar dari mode fullscreen dan ubah tampilan area
+    cameraContainerBox.classList.remove('fullscreen-mode');
     cameraArea.style.display = 'none';
     previewArea.style.display = 'flex';
+  }
+
+  captureBtn.addEventListener('click', () => {
+    cameraContainerBox.classList.add('fullscreen-mode');
   });
+
+  fsCaptureBtn.addEventListener('click', takeSnapshot);
 
   retakeBtn.addEventListener('click', () => {
     base64PhotoData = '';
