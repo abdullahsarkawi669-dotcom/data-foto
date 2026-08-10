@@ -551,7 +551,11 @@
     }
 
     const { nama, kelas } = parseSantri(rawName);
-    const filename = `${nama.replace(/\s+/g, '_')}_${new Date().getTime()}.jpg`;
+    
+    // --- PERUBAHAN POLA NAMA FILE DISINI ---
+    // Format: KELAS-NAMA_Timestamp.jpg (Spasi pada nama diubah menjadi underscore agar ramah sistem file)
+    const formattedNama = nama.replace(/\s+/g, '_');
+    const filename = `${kelas}-${formattedNama}_${new Date().getTime()}.jpg`;
 
     const payload = {
       nama: nama,
