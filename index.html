@@ -156,7 +156,6 @@
     .close-modal { background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; }
     .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 16px; }
     
-    /* Penyesuaian area Gallery agar tombol Hapus bisa floating di pojok */
     .gallery-item { position: relative; display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
     .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 12px; border: 1px solid var(--border-color); }
     .gallery-item span { font-size: 11px; font-weight: 600; line-height: 1.3; word-break: break-word; }
@@ -169,6 +168,15 @@
       transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     .delete-photo-btn:hover { background: #dc2626; transform: scale(1.1); }
+    
+    /* Tombol Ganti Foto di Riwayat */
+    .edit-photo-btn {
+      position: absolute; top: 6px; left: 6px; background: rgba(37, 99, 235, 0.9);
+      color: white; border: none; border-radius: 50%; width: 28px; height: 28px;
+      font-size: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center;
+      transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .edit-photo-btn:hover { background: #1d4ed8; transform: scale(1.1); }
 
     #zipLoadingOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9);
@@ -355,7 +363,6 @@
   let selectedNameRaw = '';
   let streamRef = null;
 
-  // --- POPULASI DATA KELAS ---
   function populateClassDropdown() {
     for (const kelas in DATA_SANTRI) {
       const option = document.createElement('option');
@@ -366,7 +373,6 @@
   }
   populateClassDropdown();
 
-  // --- KONTROL KAMERA ---
   async function startCamera() {
     if (streamRef) return;
     try {
@@ -397,7 +403,6 @@
     currentPhotoData = '';
   }
 
-  // --- LOGIKA PENCARIAN & FILTER ---
   function showSuggestions(query) {
     const selectedClass = classFilter.value;
     let filtered = SANTRI_LIST;
@@ -464,7 +469,6 @@
   cancelCameraBtn.addEventListener('click', resetToInitialState);
   cancelPreviewBtn.addEventListener('click', resetToInitialState);
 
-  // --- LOGIKA JEPRET ---
   captureBtn.addEventListener('click', () => {
     const MAX_DIMENSION = 1600;
     let width = videoElement.videoWidth;
@@ -551,25 +555,40 @@
         const div = document.createElement('div');
         div.className = 'gallery-item';
         
-        // Buat Elemen Tombol Hapus
+        // Tombol Ganti Foto (Kiri)
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-photo-btn';
+        editBtn.innerHTML = '<i class="fas fa-camera"></i>';
+        editBtn.title = `Ganti foto ${key}`;
+        
+        editBtn.addEventListener('click', () => {
+          galleryModal.style.display = 'none'; // Tutup riwayat
+          
+          searchInput.value = key;
+          selectedNameRaw = key;
+          
+          currentPhotoData = '';
+          previewArea.style.display = 'none';
+          downloadBtn.style.display = 'none';
+          saveAndDownloadBtn.style.display = 'none';
+          
+          cameraArea.style.display = 'flex';
+          startCamera();
+        });
+
+        // Tombol Hapus (Kanan)
         const delBtn = document.createElement('button');
         delBtn.className = 'delete-photo-btn';
         delBtn.innerHTML = '<i class="fas fa-trash"></i>';
         delBtn.title = `Hapus foto ${key}`;
         
-        // Logika Hapus Data
         delBtn.addEventListener('click', () => {
           if (confirm(`Yakin ingin menghapus foto ${key}?`)) {
             const transaction = db.transaction([storeName], 'readwrite');
             const store = transaction.objectStore(storeName);
             store.delete(key).onsuccess = () => {
-              // Hapus dari cache internal
               delete savedPhotosCache[key];
-              
-              // Hapus elemen dari tampilan Gallery
               div.remove();
-              
-              // Jika galeri kosong setelah dihapus, tampilkan pesan kosong
               if (Object.keys(savedPhotosCache).length === 0) {
                 galleryGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">Belum ada foto yang tersimpan.</p>';
               }
@@ -577,16 +596,14 @@
           }
         });
 
-        // Elemen Gambar
         const img = document.createElement('img');
         img.src = savedPhotosCache[key];
         img.alt = key;
 
-        // Elemen Teks Nama
         const span = document.createElement('span');
         span.textContent = key;
         
-        // Susun ke dalam container div
+        div.appendChild(editBtn);
         div.appendChild(delBtn);
         div.appendChild(img);
         div.appendChild(span);
@@ -603,7 +620,6 @@
   
   closeFolderBtn.addEventListener('click', () => galleryModal.style.display = 'none');
 
-  // --- FUNGSI EXPORT ZIP ---
   backupZipBtn.addEventListener('click', () => {
     const transaction = db.transaction([storeName], 'readonly');
     const store = transaction.objectStore(storeName);
