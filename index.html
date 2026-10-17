@@ -79,8 +79,6 @@
     .input-wrapper select { appearance: none; cursor: pointer; }
     .input-wrapper input:focus, .input-wrapper select:focus { border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
     .input-wrapper .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; pointer-events: none; }
-    
-    /* Ikon panah khusus untuk select */
     .select-arrow { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
 
     .suggestion-list {
@@ -105,6 +103,7 @@
 
     hr { border: 0; border-top: 1px dashed #cbd5e1; margin: 4px 0; }
 
+    /* Pengaturan Area Kamera Desktop */
     .camera-section { display: flex; flex-direction: column; gap: 12px; }
     .camera-container {
       width: 100%; border-radius: 16px; overflow: hidden; background: #000; position: relative;
@@ -121,8 +120,31 @@
     .btn-secondary { background: var(--secondary); color: var(--text-dark); border: 1px solid #cbd5e1; }
     .btn-danger { background: #fff; color: var(--danger); border: 1px solid var(--danger); }
     .btn-success { background: var(--success); color: white; }
-
     .action-buttons { display: flex; gap: 10px; margin-top: 10px; }
+
+    /* LAYAR PENUH UNTUK HP (MOBILE) */
+    @media (max-width: 768px) {
+      .camera-section {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        z-index: 9999; background: #000; margin: 0; padding: 0; border-radius: 0;
+        display: flex; flex-direction: column; justify-content: center;
+      }
+      .camera-section > label {
+        position: absolute; top: 20px; left: 20px; color: white; z-index: 10002;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-size: 16px;
+      }
+      .camera-container {
+        flex: 1; height: 100%; width: 100%; border: none; border-radius: 0; aspect-ratio: auto;
+      }
+      video, #imagePreview { width: 100%; height: 100%; object-fit: cover; }
+      
+      /* Tombol mengambang (floating) di atas kamera pada HP */
+      .action-buttons {
+        position: absolute; bottom: 30px; left: 20px; right: 20px;
+        z-index: 10001; margin-top: 0;
+      }
+      .btn { padding: 16px 20px; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    }
 
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75);
@@ -132,9 +154,7 @@
       background: white; width: 100%; max-width: 800px; max-height: 90vh; border-radius: 24px;
       display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
     }
-    .modal-header {
-      padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;
-    }
+    .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
     .modal-header h2 { font-size: 18px; display: flex; align-items: center; gap: 10px; }
     .close-modal { background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; }
     .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 16px; }
@@ -145,7 +165,7 @@
 
     #zipLoadingOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9);
-      z-index: 999; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 15px;
+      z-index: 99999; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 15px;
     }
     .spinner {
       width: 40px; height: 40px; border: 4px solid rgba(37, 99, 235, 0.2);
@@ -174,14 +194,13 @@
   </div>
 
   <div class="card-box">
-    <!-- Filter Kelas Baru -->
+    <!-- Filter Kelas -->
     <div class="input-group">
       <label for="classFilter"><i class="fas fa-users"></i> Pilih Kelas</label>
       <div class="input-wrapper">
         <i class="fas fa-filter search-icon"></i>
         <select id="classFilter">
           <option value="">-- Semua Kelas --</option>
-          <!-- Options dibuat via JavaScript -->
         </select>
         <i class="fas fa-chevron-down select-arrow"></i>
       </div>
@@ -198,38 +217,46 @@
     </div>
 
     <hr>
+  </div>
+</div>
 
-    <div id="cameraArea" class="camera-section" style="display: none;">
-      <label><i class="fas fa-video"></i> Kamera Utama</label>
-      <div class="camera-container">
-        <video id="videoElement" autoplay playsinline></video>
-      </div>
-      <div class="action-buttons">
-        <button class="btn btn-danger" id="cancelCameraBtn" style="flex: 1;"><i class="fas fa-times"></i> Batal</button>
-        <button class="btn btn-secondary" id="captureBtn" style="flex: 2;"><i class="fas fa-camera"></i> Jepret Foto</button>
-      </div>
-    </div>
+<!-- Kamera Area (Dikeluarkan dari card-box agar bisa fullscreen sempurna di HP) -->
+<div id="cameraArea" class="camera-section" style="display: none;">
+  <label><i class="fas fa-video"></i> Kamera Utama</label>
+  <div class="camera-container">
+    <video id="videoElement" autoplay playsinline></video>
+  </div>
+  <div class="action-buttons">
+    <button class="btn btn-danger" id="cancelCameraBtn" style="flex: 1;"><i class="fas fa-times"></i> Batal</button>
+    <button class="btn btn-secondary" id="captureBtn" style="flex: 2;"><i class="fas fa-camera"></i> Jepret Foto</button>
+  </div>
+</div>
 
-    <div id="previewArea" class="camera-section" style="display: none;">
-      <label><i class="fas fa-image"></i> Pratinjau Foto Santri</label>
-      <div class="camera-container">
-        <img id="imagePreview" src="" alt="Hasil Foto">
-      </div>
-      
-      <div class="action-buttons">
-        <button class="btn btn-danger" id="retakeBtn" style="flex: 1;"><i class="fas fa-redo-alt"></i> Ganti Foto</button>
-        <button class="btn btn-success" id="downloadBtn" style="flex: 1; display: none;"><i class="fas fa-download"></i> Unduh Ulang</button>
-      </div>
-    </div>
-
-    <canvas id="canvasElement" style="display: none;"></canvas>
+<!-- Pratinjau Area -->
+<div id="previewArea" class="camera-section" style="display: none;">
+  <label><i class="fas fa-image"></i> Pratinjau Foto</label>
+  <div class="camera-container">
+    <img id="imagePreview" src="" alt="Hasil Foto">
+  </div>
+  <div class="action-buttons" style="flex-wrap: wrap;">
+    <button class="btn btn-danger" id="cancelPreviewBtn" style="flex: 1; min-width: 100px;"><i class="fas fa-times"></i> Batal</button>
+    <button class="btn btn-secondary" id="retakeBtn" style="flex: 1; min-width: 120px;"><i class="fas fa-redo-alt"></i> Ganti Foto</button>
     
-    <button class="btn btn-primary" id="saveAndDownloadBtn" style="margin-top: 8px; display: none;">
+    <!-- Tombol Simpan (untuk foto baru) -->
+    <button class="btn btn-primary" id="saveAndDownloadBtn" style="flex: 2; display: none; min-width: 200px;">
       <i class="fas fa-save"></i> Simpan & Unduh Foto
+    </button>
+    
+    <!-- Tombol Unduh Ulang (jika foto sudah ada sebelumnya) -->
+    <button class="btn btn-success" id="downloadBtn" style="flex: 2; display: none; min-width: 200px;">
+      <i class="fas fa-download"></i> Unduh Ulang
     </button>
   </div>
 </div>
 
+<canvas id="canvasElement" style="display: none;"></canvas>
+
+<!-- Modal Riwayat Tersimpan -->
 <div class="modal-overlay" id="galleryModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -306,6 +333,7 @@
   
   const captureBtn = document.getElementById('captureBtn');
   const cancelCameraBtn = document.getElementById('cancelCameraBtn'); 
+  const cancelPreviewBtn = document.getElementById('cancelPreviewBtn');
   const retakeBtn = document.getElementById('retakeBtn');
   const downloadBtn = document.getElementById('downloadBtn');
   const saveAndDownloadBtn = document.getElementById('saveAndDownloadBtn');
@@ -326,7 +354,7 @@
   let selectedNameRaw = '';
   let streamRef = null;
 
-  // --- POPULASI DATA KELAS KE DROPDOWN ---
+  // --- POPULASI DATA KELAS ---
   function populateClassDropdown() {
     for (const kelas in DATA_SANTRI) {
       const option = document.createElement('option');
@@ -341,6 +369,7 @@
   async function startCamera() {
     if (streamRef) return;
     try {
+      // facingMode: 'environment' otomatis memanggil kamera belakang (jika ada) dan menyesuaikan orientasi layar (portrait)
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
       });
@@ -359,33 +388,28 @@
     }
   }
 
-  // --- LOGIKA PENCARIAN & FILTER KELAS ---
+  // --- FUNGSI RESET KE KEADAAN AWAL ---
+  function resetToInitialState() {
+    stopCamera();
+    cameraArea.style.display = 'none';
+    previewArea.style.display = 'none';
+    searchInput.value = '';
+    selectedNameRaw = '';
+    currentPhotoData = '';
+    // Pilihan kelas (classFilter) sengaja TIDAK di-reset agar bisa lanjut memfoto anak di kelas yang sama
+  }
+
+  // --- LOGIKA PENCARIAN & FILTER ---
   function showSuggestions(query) {
     const selectedClass = classFilter.value;
-    
-    // Saring berdasarkan kelas (jika ada)
     let filtered = SANTRI_LIST;
-    if (selectedClass) {
-      filtered = filtered.filter(s => s.endsWith(`(${selectedClass})`));
-    }
     
-    // Jangan munculkan apa-apa jika query kosong DAN kelas belum dipilih
-    if (!query.trim() && !selectedClass) { 
-      suggestionBox.style.display = 'none'; 
-      return; 
-    }
-    
-    // Saring berdasarkan ketikan
-    if (query.trim()) {
-      filtered = filtered.filter(s => s.toLowerCase().includes(query.toLowerCase()));
-    }
+    if (selectedClass) filtered = filtered.filter(s => s.endsWith(`(${selectedClass})`));
+    if (!query.trim() && !selectedClass) { suggestionBox.style.display = 'none'; return; }
+    if (query.trim()) filtered = filtered.filter(s => s.toLowerCase().includes(query.toLowerCase()));
     
     suggestionBox.innerHTML = '';
-    
-    if (filtered.length === 0) { 
-      suggestionBox.style.display = 'none'; 
-      return; 
-    }
+    if (filtered.length === 0) { suggestionBox.style.display = 'none'; return; }
     
     filtered.forEach(item => {
       const div = document.createElement('div');
@@ -407,8 +431,6 @@
         searchInput.value = item;
         selectedNameRaw = item;
         suggestionBox.style.display = 'none';
-        
-        saveAndDownloadBtn.style.display = hasPhoto ? 'none' : 'flex';
 
         if (hasPhoto) {
           currentPhotoData = hasPhoto;
@@ -416,11 +438,12 @@
           stopCamera();
           cameraArea.style.display = 'none';
           previewArea.style.display = 'flex';
+          
+          saveAndDownloadBtn.style.display = 'none';
           downloadBtn.style.display = 'flex';
         } else {
           currentPhotoData = '';
           previewArea.style.display = 'none';
-          downloadBtn.style.display = 'none';
           cameraArea.style.display = 'flex';
           startCamera();
         }
@@ -430,11 +453,9 @@
     suggestionBox.style.display = 'block';
   }
 
-  // Event listener untuk input teks dan fokus
   searchInput.addEventListener('input', (e) => showSuggestions(e.target.value));
-  searchInput.addEventListener('focus', (e) => showSuggestions(e.target.value)); // Tampilkan saat di-klik
+  searchInput.addEventListener('focus', (e) => showSuggestions(e.target.value));
   
-  // Jika filter kelas diubah, bersihkan pencarian dan tampilkan isi kelas itu
   classFilter.addEventListener('change', () => {
     searchInput.value = '';
     showSuggestions('');
@@ -446,22 +467,17 @@
     }
   });
 
-  // --- BATALKAMERA, JEPRET & RETAKE ---
-  cancelCameraBtn.addEventListener('click', () => {
-    stopCamera();
-    cameraArea.style.display = 'none';
-    searchInput.value = '';        
-    selectedNameRaw = '';
-    currentPhotoData = '';
-    saveAndDownloadBtn.style.display = 'none';
-    // classFilter sengaja tidak di-reset agar user bisa lanjut ke anak berikutnya di kelas yang sama
-  });
+  // --- EVENT TOMBOL BATAL ---
+  cancelCameraBtn.addEventListener('click', resetToInitialState);
+  cancelPreviewBtn.addEventListener('click', resetToInitialState);
 
+  // --- LOGIKA JEPRET ---
   captureBtn.addEventListener('click', () => {
-    const MAX_DIMENSION = 1280;
+    const MAX_DIMENSION = 1600; // Resolusi foto diturunkan sedikit jadi medium agar jelas namun tidak boros
     let width = videoElement.videoWidth;
     let height = videoElement.videoHeight;
 
+    // Menghitung aspect ratio aktual yang menyesuaikan layar/orientasi device
     if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
       if (width > height) {
         height = Math.round((height * MAX_DIMENSION) / width);
@@ -477,6 +493,7 @@
     const context = canvasElement.getContext('2d');
     context.drawImage(videoElement, 0, 0, width, height);
     
+    // Kualitas medium/bagus (85% JPEG kompresi)
     const dataUrl = canvasElement.toDataURL('image/jpeg', 0.85); 
     
     imagePreview.src = dataUrl;
@@ -485,6 +502,7 @@
     stopCamera(); 
     cameraArea.style.display = 'none';
     previewArea.style.display = 'flex';
+    
     downloadBtn.style.display = 'none';
     saveAndDownloadBtn.style.display = 'flex';
   });
@@ -492,13 +510,11 @@
   retakeBtn.addEventListener('click', () => {
     currentPhotoData = '';
     previewArea.style.display = 'none';
-    downloadBtn.style.display = 'none';
-    saveAndDownloadBtn.style.display = 'none';
     cameraArea.style.display = 'flex';
     startCamera(); 
   });
 
-  // --- FUNGSI AUTO DOWNLOAD ---
+  // --- FUNGSI AUTO DOWNLOAD KE FOLDER DOWNLOADS ---
   function triggerDownload(dataUrl, rawNameStr) {
     const match = rawNameStr.match(/^(.*?)\s*\(([^)]+)\)$/);
     const namaBersih = match ? match[1].trim() : rawNameStr;
@@ -513,7 +529,7 @@
     document.body.removeChild(a);
   }
 
-  // --- SIMPAN DB & UNDUH LALU RESET UI TAPI TETAPKAN KELAS ---
+  // --- SIMPAN DB, UNDUH & KEMBALI KE AWAL ---
   saveAndDownloadBtn.addEventListener('click', () => {
     const rawName = searchInput.value.trim();
     if (!rawName || !currentPhotoData) return;
@@ -526,26 +542,19 @@
     request.onsuccess = () => {
       savedPhotosCache[rawName] = currentPhotoData;
       triggerDownload(currentPhotoData, rawName);
+      alert('✅ Foto tersimpan dan berhasil diunduh!');
       
-      // RESET UI KE TAMPILAN AWAL (TAPI classFilter TIDAK BERUBAH)
-      stopCamera();
-      cameraArea.style.display = 'none';
-      previewArea.style.display = 'none';
-      searchInput.value = '';
-      selectedNameRaw = '';
-      currentPhotoData = '';
-      saveAndDownloadBtn.style.display = 'none';
-      downloadBtn.style.display = 'none';
+      resetToInitialState();
     };
   });
 
-  // --- FUNGSI UNDUH SAJA ---
+  // --- UNDUH ULANG (JIKA SUDAH ADA) ---
   downloadBtn.addEventListener('click', () => {
     if (!selectedNameRaw || !currentPhotoData) return;
     triggerDownload(currentPhotoData, selectedNameRaw);
   });
 
-  // --- MODAL RIWAYAT TERSIMPAN ---
+  // --- MODAL RIWAYAT ---
   openFolderBtn.addEventListener('click', () => {
     galleryGrid.innerHTML = '';
     const keys = Object.keys(savedPhotosCache);
@@ -563,12 +572,9 @@
     
     galleryModal.style.display = 'flex';
   });
+  closeFolderBtn.addEventListener('click', () => galleryModal.style.display = 'none');
 
-  closeFolderBtn.addEventListener('click', () => {
-    galleryModal.style.display = 'none';
-  });
-
-  // --- FUNGSI EXPORT / BACKUP KE ZIP ---
+  // --- FUNGSI EXPORT ZIP ---
   backupZipBtn.addEventListener('click', () => {
     const transaction = db.transaction([storeName], 'readonly');
     const store = transaction.objectStore(storeName);
@@ -576,17 +582,11 @@
 
     request.onsuccess = async () => {
       const records = request.result;
-      if (records.length === 0) {
-        alert('Database kosong. Belum ada foto yang bisa di-backup.');
-        return;
-      }
-
+      if (records.length === 0) { alert('Database kosong. Belum ada foto yang bisa di-backup.'); return; }
       zipLoadingOverlay.style.display = 'flex';
-
       try {
         const zip = new JSZip();
         const folder = zip.folder("Backup_Foto_Santri");
-
         records.forEach(record => {
           const match = record.id.match(/^(.*?)\s*\(([^)]+)\)$/);
           const nama = match ? match[1].trim() : record.id;
@@ -595,29 +595,21 @@
           const base64Data = record.photoData.split(',')[1];
           folder.file(filename, base64Data, {base64: true});
         });
-
         const content = await zip.generateAsync({type: "blob"});
         const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        const zipFilename = `Backup_Foto_Santri_${dateStr}.zip`;
-
         const a = document.createElement("a");
         a.href = URL.createObjectURL(content);
-        a.download = zipFilename;
+        a.download = `Backup_Foto_Santri_${dateStr}.zip`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(a.href);
-
         alert(`✅ Berhasil! File ZIP berisi ${records.length} foto telah diunduh.`);
       } catch (error) {
         alert('❌ Terjadi kesalahan saat membuat ZIP: ' + error.message);
       } finally {
         zipLoadingOverlay.style.display = 'none';
       }
-    };
-    
-    request.onerror = () => {
-      alert('❌ Gagal membaca database aplikasi.');
     };
   });
 </script>
