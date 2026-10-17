@@ -3,18 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
-  <title>Upload Foto Santri - SMP Islam Terpadu Putra Abu Hurairah Mataram</title>
+  <title>Database Foto Santri - Offline</title>
   
-  <!-- FontAwesome & Google Fonts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!--bikin icon dengan manifest-->
-  <link rel="manifest" href="manifest.json">
-	<meta name="theme-color" content="#2563eb">
   
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <style>
     :root {
       --primary: #2563eb;
@@ -24,7 +19,6 @@
       --text-muted: #64748b;
       --border-color: #e2e8f0;
       --danger: #ef4444;
-      --danger-hover: #dc2626;
       --success: #10b981;
       --font-family: 'Plus Jakarta Sans', sans-serif;
     }
@@ -46,556 +40,585 @@
       max-width: 600px;
       width: 100%;
       background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
       border-radius: 24px;
       padding: 32px 28px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.5);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+      position: relative;
     }
 
-    .header-title {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .header-title h1 {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--text-dark);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 6px;
-    }
-
-    .header-title h1 i {
-      color: var(--primary);
-      background: #eff6ff;
-      padding: 12px;
-      border-radius: 14px;
-      font-size: 20px;
-    }
-
-    .header-title p {
-      font-size: 14px;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
+    .header-title { text-align: center; margin-bottom: 24px; }
+    .header-title h1 { font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 6px; }
+    .header-title h1 i { color: var(--primary); background: #eff6ff; padding: 12px; border-radius: 14px; font-size: 20px; }
+    .header-title p { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+    
+    .status-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; }
+    .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+    .mode-badge { background: #dcfce7; color: #166534; }
+    .folder-btn { background: #fef3c7; color: #b45309; cursor: pointer; transition: 0.2s; }
+    .folder-btn:hover { background: #fde68a; }
+    .backup-btn { background: #e0e7ff; color: #4338ca; cursor: pointer; transition: 0.2s; }
+    .backup-btn:hover { background: #c7d2fe; }
 
     .card-box {
       background: #ffffff;
       padding: 24px;
       border-radius: 20px;
       border: 1px solid var(--border-color);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+      display: flex; flex-direction: column; gap: 20px;
     }
 
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      position: relative;
+    .input-group { display: flex; flex-direction: column; gap: 8px; position: relative; }
+    .input-group label { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    
+    .input-wrapper { position: relative; }
+    .input-wrapper input, .input-wrapper select {
+      width: 100%; padding: 14px 16px 14px 44px; border-radius: 14px; border: 2px solid var(--border-color);
+      font-size: 14px; font-family: inherit; background: var(--secondary); outline: none; font-weight: 500;
+      color: var(--text-dark); transition: all 0.3s ease;
     }
+    .input-wrapper select { appearance: none; cursor: pointer; }
+    .input-wrapper input:focus, .input-wrapper select:focus { border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+    .input-wrapper .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; pointer-events: none; }
+    
+    /* Ikon panah khusus untuk select */
+    .select-arrow { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
 
-    .input-group label {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-dark);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .input-group label i { color: var(--text-muted); }
-
-    .input-wrapper {
-      position: relative;
-    }
-
-    .input-wrapper input {
-      width: 100%;
-      padding: 14px 16px 14px 44px;
-      border-radius: 14px;
-      border: 2px solid var(--border-color);
-      font-size: 14px;
-      font-family: inherit;
-      background: var(--secondary);
-      transition: all 0.3s ease;
-      outline: none;
-      color: var(--text-dark);
-      font-weight: 500;
-    }
-
-    .input-wrapper input:focus {
-      border-color: var(--primary);
-      background: #ffffff;
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-    }
-
-    .input-wrapper .search-icon {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 16px;
-      pointer-events: none;
-    }
-
-    /* Floating Suggestion List */
     .suggestion-list {
-      background: #ffffff;
-      border-radius: 14px;
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15), 0 8px 10px -6px rgba(0,0,0,0.1);
-      max-height: 220px;
-      overflow-y: auto;
-      position: absolute;
-      width: 100%;
-      top: 100%;
-      z-index: 20;
-      margin-top: 8px;
-      border: 1px solid var(--border-color);
-      display: none;
-      scrollbar-width: thin;
-      scrollbar-color: #cbd5e1 transparent;
+      background: #ffffff; border-radius: 14px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15);
+      max-height: 250px; overflow-y: auto; position: absolute; width: 100%; top: 100%; z-index: 20;
+      margin-top: 8px; border: 1px solid var(--border-color); display: none;
     }
     
-    .suggestion-list::-webkit-scrollbar { width: 6px; }
-    .suggestion-list::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
-
     .suggestion-item {
-      padding: 14px 16px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      border-bottom: 1px solid var(--secondary);
-      transition: background 0.2s ease;
+      padding: 12px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--secondary); transition: background 0.2s ease;
     }
-
-    .suggestion-item:last-child { border-bottom: none; }
-    .suggestion-item:hover { background: #eff6ff; color: var(--primary); }
-
-    hr {
-      border: 0;
-      border-top: 1px dashed #cbd5e1;
-      margin: 4px 0;
-    }
-
-    /* Camera Area */
-    .camera-section {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .camera-container {
-      width: 100%;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #000;
-      position: relative;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-      border: 2px solid var(--border-color);
-      aspect-ratio: 4/3;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    video, #imagePreview {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    /* Fullscreen Camera Mode Styling */
-    .camera-container.fullscreen-mode {
-      position: fixed !important;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 9999;
-      border-radius: 0;
-      border: none;
-      aspect-ratio: unset;
-    }
-
-    .camera-container.fullscreen-mode video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    /* Tombol Kontrol Khusus Fullscreen (Default Tersembunyi) */
-    .fs-controls, .btn-fs-close {
-      display: none;
-    }
-
-    /* Ketika Fullscreen Aktif, Tampilkan Tombol-tombol di Atas Video */
-    .camera-container.fullscreen-mode .fs-controls {
-      display: flex;
-      position: absolute;
-      bottom: 40px;
-      left: 0;
-      width: 100%;
-      justify-content: center;
-      z-index: 10001;
-    }
-
-    .camera-container.fullscreen-mode .btn-fs-close {
-      display: flex;
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(0, 0, 0, 0.6);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 45px;
-      height: 45px;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      z-index: 10001;
-      cursor: pointer;
-    }
-
-    .btn-fs-capture {
-      background: #ffffff;
-      color: var(--primary);
-      border-radius: 50%;
-      width: 75px;
-      height: 75px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      box-shadow: 0 0 25px rgba(0,0,0,0.5);
-      cursor: pointer;
-      border: 4px solid var(--primary);
-    }
-
-    /* Buttons */
-    .btn {
-      width: 100%;
-      padding: 14px 20px;
-      border-radius: 14px;
-      font-weight: 600;
-      font-size: 15px;
-      font-family: inherit;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: all 0.2s ease;
-      border: none;
-    }
-
-    .btn:active { transform: scale(0.98); }
-    .btn:disabled { opacity: 0.7; cursor: not-allowed; }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-      box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
-    }
-    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); box-shadow: 0 6px 12px -2px rgba(37, 99, 235, 0.4); }
-
-    .btn-secondary {
-      background: var(--secondary);
-      color: var(--text-dark);
-      border: 1px solid #cbd5e1;
-    }
-    .btn-secondary:hover { background: #e2e8f0; }
-
-    .btn-danger {
-      background: #fff;
-      color: var(--danger);
-      border: 1px solid var(--danger);
-    }
-    .btn-danger:hover { background: #fef2f2; }
-
-    /* Loading Spinner */
-    .loader-container {
-      display: none;
-      justify-content: center;
-      align-items: center;
-      padding: 10px 0;
-    }
+    .suggestion-item:hover { background: #eff6ff; }
     
-    .spinner {
-      width: 24px;
-      height: 24px;
-      border: 3px solid rgba(37, 99, 235, 0.2);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+    .thumb-preview { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #e2e8f0; border: 2px solid var(--primary); }
+    .thumb-placeholder {
+      width: 40px; height: 40px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; 
+      justify-content: center; color: #94a8c3; font-size: 16px; border: 2px dashed #cbd5e1;
     }
+    .suggestion-text { font-size: 14px; font-weight: 600; color: var(--text-dark); display: flex; flex-direction: column; }
+    .status-text { font-size: 11px; color: var(--success); font-weight: 700; margin-top: 2px; }
 
+    hr { border: 0; border-top: 1px dashed #cbd5e1; margin: 4px 0; }
+
+    .camera-section { display: flex; flex-direction: column; gap: 12px; }
+    .camera-container {
+      width: 100%; border-radius: 16px; overflow: hidden; background: #000; position: relative;
+      border: 2px solid var(--border-color); aspect-ratio: 4/3; display: flex; justify-content: center; align-items: center;
+    }
+    video, #imagePreview { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .btn {
+      width: 100%; padding: 14px 20px; border-radius: 14px; font-weight: 600; font-size: 15px; font-family: inherit;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s ease; border: none;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: var(--secondary); color: var(--text-dark); border: 1px solid #cbd5e1; }
+    .btn-danger { background: #fff; color: var(--danger); border: 1px solid var(--danger); }
+    .btn-success { background: var(--success); color: white; }
+
+    .action-buttons { display: flex; gap: 10px; margin-top: 10px; }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(4px); z-index: 100; display: none; justify-content: center; align-items: center; padding: 20px;
+    }
+    .modal-content {
+      background: white; width: 100%; max-width: 800px; max-height: 90vh; border-radius: 24px;
+      display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+    .modal-header {
+      padding: 20px 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-header h2 { font-size: 18px; display: flex; align-items: center; gap: 10px; }
+    .close-modal { background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; }
+    .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 16px; }
+    
+    .gallery-item { display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
+    .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 12px; border: 1px solid var(--border-color); }
+    .gallery-item span { font-size: 11px; font-weight: 600; line-height: 1.3; word-break: break-word; }
+
+    #zipLoadingOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9);
+      z-index: 999; display: none; flex-direction: column; justify-content: center; align-items: center; gap: 15px;
+    }
+    .spinner {
+      width: 40px; height: 40px; border: 4px solid rgba(37, 99, 235, 0.2);
+      border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;
+    }
     @keyframes spin { 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
+<div id="zipLoadingOverlay">
+  <div class="spinner"></div>
+  <h3 style="color: var(--text-dark);">Sedang mengemas foto ke dalam ZIP...</h3>
+  <p style="color: var(--text-muted); font-size: 14px;">Mohon tunggu sebentar, jangan tutup browser.</p>
+</div>
+
 <div class="app-container">
   <div class="header-title">
-    <h1><i class="fas fa-camera-retro"></i> Input Foto Santri</h1>
-    <p>SMP Islam Terpadu Putra Abu Hurairah Mataram</p>
+    <h1><i class="fas fa-database"></i> Database Foto Lokal</h1>
+    <p>SMP IT Putra Abu Hurairah Mataram</p>
+    <div class="status-area">
+      <div class="status-badge mode-badge"><i class="fas fa-hdd"></i> Offline</div>
+      <div class="status-badge folder-btn" id="openFolderBtn"><i class="fas fa-history"></i> Riwayat</div>
+      <div class="status-badge backup-btn" id="backupZipBtn"><i class="fas fa-file-archive"></i> Backup (.ZIP)</div>
+    </div>
   </div>
 
   <div class="card-box">
-    <!-- Input Pencarian Santri dengan Floating List -->
+    <!-- Filter Kelas Baru -->
     <div class="input-group">
-      <label for="searchSantriInput"><i class="fas fa-user-graduate"></i> Cari Nama Santri</label>
+      <label for="classFilter"><i class="fas fa-users"></i> Pilih Kelas</label>
       <div class="input-wrapper">
-        <i class="fas fa-search search-icon"></i>
-        <input type="text" id="searchSantriInput" placeholder="Ketik nama untuk mencari..." autocomplete="off">
+        <i class="fas fa-filter search-icon"></i>
+        <select id="classFilter">
+          <option value="">-- Semua Kelas --</option>
+          <!-- Options dibuat via JavaScript -->
+        </select>
+        <i class="fas fa-chevron-down select-arrow"></i>
+      </div>
+    </div>
+
+    <!-- Pencarian Nama Santri -->
+    <div class="input-group">
+      <label for="searchSantriInput"><i class="fas fa-search"></i> Cari Nama Santri</label>
+      <div class="input-wrapper">
+        <i class="fas fa-user-graduate search-icon"></i>
+        <input type="text" id="searchSantriInput" placeholder="Ketik nama santri..." autocomplete="off">
       </div>
       <div id="suggestionBox" class="suggestion-list"></div>
     </div>
 
     <hr>
 
-    <!-- Area Kamera Live -->
-    <div id="cameraArea" class="camera-section">
-      <label><i class="fas fa-video"></i> Kamera Perangkat</label>
-      <div class="camera-container" id="cameraContainerBox">
+    <div id="cameraArea" class="camera-section" style="display: none;">
+      <label><i class="fas fa-video"></i> Kamera Utama</label>
+      <div class="camera-container">
         <video id="videoElement" autoplay playsinline></video>
-        
-        <!-- Tombol Tutup (X) & Tombol Jepret khusus Fullscreen diposisikan di dalam container -->
-        <button class="btn-fs-close" id="closeFsBtn" type="button"><i class="fas fa-times"></i></button>
-        <div class="fs-controls" id="fsControls">
-          <button class="btn-fs-capture" id="fsCaptureBtn" type="button"><i class="fas fa-camera"></i></button>
-        </div>
       </div>
-      
-      <button class="btn btn-secondary" id="captureBtn">
-        <i class="fas fa-camera"></i> Buka Kamera Fullscreen
-      </button>
+      <div class="action-buttons">
+        <button class="btn btn-danger" id="cancelCameraBtn" style="flex: 1;"><i class="fas fa-times"></i> Batal</button>
+        <button class="btn btn-secondary" id="captureBtn" style="flex: 2;"><i class="fas fa-camera"></i> Jepret Foto</button>
+      </div>
     </div>
 
-    <!-- Area Pratinjau Hasil Jepretan -->
     <div id="previewArea" class="camera-section" style="display: none;">
-      <label><i class="fas fa-image"></i> Pratinjau Foto</label>
+      <label><i class="fas fa-image"></i> Pratinjau Foto Santri</label>
       <div class="camera-container">
         <img id="imagePreview" src="" alt="Hasil Foto">
       </div>
-      <button class="btn btn-danger" id="retakeBtn">
-        <i class="fas fa-redo-alt"></i> Foto Ulang
-      </button>
+      
+      <div class="action-buttons">
+        <button class="btn btn-danger" id="retakeBtn" style="flex: 1;"><i class="fas fa-redo-alt"></i> Ganti Foto</button>
+        <button class="btn btn-success" id="downloadBtn" style="flex: 1; display: none;"><i class="fas fa-download"></i> Unduh Ulang</button>
+      </div>
     </div>
 
-    <!-- Canvas tersembunyi untuk mengambil frame video -->
     <canvas id="canvasElement" style="display: none;"></canvas>
-
-    <div class="loader-container" id="loadingSpinner">
-      <div class="spinner"></div>
-    </div>
     
-    <!-- Tombol Submit Akhir -->
-    <button class="btn btn-primary" id="uploadBtn" style="margin-top: 8px;">
-      <i class="fas fa-cloud-upload-alt"></i> Simpan ke Database
+    <button class="btn btn-primary" id="saveAndDownloadBtn" style="margin-top: 8px; display: none;">
+      <i class="fas fa-save"></i> Simpan & Unduh Foto
     </button>
   </div>
 </div>
 
-<script>
-  const API_URL = 'https://script.google.com/macros/s/AKfycbx_GJlxF-ZHABYxEFpc7Pv2Eoq2fK_Xfw6tXkGJfwIb4o6M9_EQyuRW1PlOxW_JTRan/exec';
+<div class="modal-overlay" id="galleryModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2><i class="fas fa-history" style="color: #b45309;"></i> Riwayat Foto Tersimpan</h2>
+      <button class="close-modal" id="closeFolderBtn"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="galleryGrid"></div>
+  </div>
+</div>
 
+<script>
   const DATA_SANTRI = {
-        "7A": ["ABDULLAH RASYIQUL AKRAM", "ABDURRAHMAN KHOLIL AL MADURY", "ABDURROZZAQ", "ADRIAN FACHRY AS`ARY", "ALBY FACHRIE", "ALIF ZIYAD ZAEN", "ATHAR RIZKY YUDHISTIRA", "AUFA AL HAMIDY", "BINTANG JULIANT ALFARABI", "FADHIL NASHIR ALBANI", "FAIZ ARFAN HAIQAL", "FAYADH ELFATA", "HADZUKI ADITYA RAMADHAN", "HAFIDS AL GHAZALLI", "HARITS ARKAAN", "HUSAIN ANAQI", "LALU IQRA ILYAS", "M. GHAISAN INDIKA HILMY", "MU'ADZ", "MUH. GHAFAR ARIEF SETIOBUDI", "MUHAMMAD ADIB", "MUHAMMAD AL FAIZ", "MUHAMMAD ALFIAN RIZQI", "MUHAMMAD AQIL", "MUHAMMAD AQIL ALMAIR RAMADHAN", "MUHAMMAD NAYAKA HAKAM", "MUHAMMAD TRISTAN ALIEF PRABOWO", "MUHAMMAD ZAKY AL-HAFIZH FAUZAN", "NADYANDA MUCHALI AL MAJIID", "RESKI ARSY NEGARA", "SULTAN FAIZULLAH ATMIJOYO", "SYABANIN ALKAUTSAR IRAWAN", "SYAFIIQ AL-ATSARI", "UKASYAH ABDURROHMAN", "UWAIS", "YUSUF ABDURRAHMAN FANSURI"],
-        "7B": ["AHMAD KADHAFI BAFADHAL", "AHMAD QAIS ALHADI", "AKBAR MUHAMMAD FAISAL", "ALKA ZAHRAN SYAFIQ", "ANTO APANSA", "BISMA ABDILLAH SURA", "GIOFANDI AHNAF SYATHIR", "IMRAN UMAR ALKATIRI", "JIKRAN ALFATIH MUDASIR", "KHANUKH MAHIR BAHASWAN", "LALU ABDURRAHMAN DZAKI KHAIRI", "LALU MUHAMMAD ISHAM HAWARI", "LALU TSAQIB AL MUHALY", "M. IBAD FA'IQ ATHAR", "M. SHAFIQ MUBARAK", "M.SULTHAN HABIBULLAH", "MIFZAL", "MUH. FAZRIL ILHAM", "MUHAMMAD AIDIL GIFARI", "MUHAMMAD AKROM ALFARUQ", "MUHAMMAD FAUZAN", "MUHAMMAD FAWWAZ ARRAYAN", "MUHAMMAD NABIIL SETIAWAN", "MUHAMMAD NAUFAL AL KHAIRY", "MUHAMMAD OZIL", "NAUFAL AL FAIZ", "PRANAJA AGHA SAFARAZ", "RADITYA NAUFAL ABIYYU", "RASYA MAULANA PRASETYO", "SAJID", "SYAFIQ ALBANY MUBARAK", "VIRZAN AL AZKA", "WAFI `ABDULLOH", "YUSUF GIBRAN RAMADHAN", "ZAKI SALEH", "ZUBAIR AL FAYYAD"],
-        "7C": ["ABBASHY RIZQILLAH JULIANGKARA", "ABIDULLAH IBRAHIM HANIF", "ABRISAM FAQIH ABBASY", "ADHWA ASHA'AD KAMIDIA", "AFKAR HAFIDZUL FAYYAD", "AHMAD AL GHAZALI", "AHSAN ABDULLAH", "ALI ABDULLAH AL BAKRI", "AMIR MUJAHID", "ANAS MUTTAQIN", "BAYU SAFA BUDI OZORA", "DANIL ZAKY AL HANIF", "FADHIL JAMAL HIZAM", "FATHIN ABDULLAH", "FATIH ARDIANSYAH MALIK", "HAFIZ PRATAMA DINATHA", "ISAM AL-KHUSYAIRI", "KEENAN DANIAL AL FAREZEL", "KHAERUL HADI JAELANI", "KHOIRUL AZZAM", "MU'ADZ RIFKI AL BAKRI", "MUH. SHOLYHIN", "MUHAMMAD ABDURRAHMAN ABBASY", "MUHAMMAD DHAFFA DZAKY PUTRASANI", "MUHAMMAD EMIRSYAH SYAWAL", "MUHAMMAD FADLILLAH", "MUHAMMAD FAIZI ATHAR AL AYYUBI", "MUHAMMAD ILYAS", "MUHAMMAD QOIS FIRDAUS", "MUHAMMAD RUSYDI THALIB", "MUHAMMAD YAZID ALI", "NIZAR", "PATIH MUHAMMAD", "ZAIM MUBARAK IBNU RASYID"],
-        "7D": ["ABDURRAHMAN HALIM", "ABDURRAHMAN HANIF", "ABU DAFIF KHOLIS AR-ROTANIYY", "ADHITYA FATHAN NURRIZKILLAH", "AHMAD SULTAN NAZHIRUL ASROFI", "AINAN NEVAN INDRAJAYA", "ALBY RIEZKY RAMADHAN", "AMMAR", "DZAKY MAHESWARA", "FATHIAN AL AZZAM", "HAFUZA ARGHANDI ISPARWONO", "ILHAMY M. WAFI", "KHAIZURAN AZFARIL HAKIM", "KHALIL ABDUL JABBAR", "LALU MUHAMMAD FAWAAZ MUSTHOFA", "M. DHAFFA GIBRAN ARANTA", "M. HISYAM AL FATHIR", "M. SALMAN AZKAMIL", "MUHAMMAD AFIIF AL - HABSYI", "MUHAMMAD AHSAN ZAKI", "MUHAMMAD ALVIN FAIZ", "MUHAMMAD AUFAR TRI IRZANI", "MUHAMMAD FALIH KASYFUL ISLAM", "MUHAMMAD FAQIH RIZQULLAH", "MUHAMMAD GIYAS AUFA", "MUHAMMAD HAYYAN", "MUHAMMAD RAIHAN AL FATIH", "MUZAKKAR HALIM KHAIRI", "RAZA ARDYLAN AMIR", "SAMI", "SAMIR JAZLAN ALHADI", "SULTAN MUHAMMAD ALFATI", "TIHAMI ABDUL MUZANNI ARBADIFA", "UBAIDURRAHMAN", "UMAR AL - FARUQ"],
-        "7E": ["ABDURRAHMAN DIANUL GIBRAN", "ABIE ALFAYAD", "AHMAD DHANIS ALFARUQ", "AHMAD ZOFRAN JIHADI", "AHMAD ZUBAIR", "AZKA RAHARDHIAN ACHMAD", "AZKA ZAHRAN SYAFIQ", "DAFFA IBNU HAFIDZ", "DANIAL FARUQ ABDURROHMAN", "FARDAN FADLI", "FARUQ NABIL ARFADANA", "FATIR KAHFI RUMI", "HANIF ABDURRAHMAN", "HUSEIN ALI FARIS", "KHAIRIL INSANI RAMADHAN", "LALU APTA PAWANA SUPRON", "M. ATAYA EL AZZAM", "MUHAMAD ZIZFAN YADI MULIAN", "MUHAMMAD AL GHAZALI SALMIN", "MUHAMMAD AMMAR", "MUHAMMAD BILAL HARYANTO", "MUHAMMAD FATHIIN RAMADHANI", "MUHAMMAD GALIH AS SAKHA", "MUHAMMAD KENZIE MAHIRA", "MUHAMMAD NAUFAL GHANI", "MUHAMMAD YUZARSIF", "MUHAMMAD ZAID ISA", "NIRHAM SAJIDAN", "RADEN ALI FIRAS RAHMATULLAH", "RAMBU RAYA RABBANI", "RIZKY RAMADHAN", "TARAGA PAMENGAS PIRATA", "THUFAIL ALBYAKSA DEBERNADI", "UMAR", "ZIYAN HAFIZURRAHMAN"],
+        "7A": ["ABDULLAH RASYIQUL AKRAM", "ABDUROHMAN KHOLIL", "ABDURROZZAQ", "ADRIAN FACHRY AS'ARY", "ALBY FACHRIE", "ALIF ZIYAD ZAEN", "ATHAR RIZKY YUDHISTIRA", "AUFA AL HAMIDI", "BINTANG JULIANT ALFARABI", "FADHIL NASHIR ALBANI", "FAIZ ARFAN HAIKAL", "FAYADH ELFATA", "HADZUKI ADITYA RAMADHAN", "HAFIDS AL GHAZALI", "HARITS ARKAAN", "HUSAIN ANAKI", "LALU IQRA ILYAS", "M. GHAISAN INDIKA HILMY", "MU'ADZ", "MUH. GHAFAR ARIEF SETIOBUDI", "MUHAMMAD ADIB", "MUHAMMAD AL FAIZ", "MUHAMMAD ALFIAN RIZQI", "MUHAMMAD AQIL", "MUHAMMAD AQIL ALMAIR RAMADHAN", "MUHAMMAD NAYAKA HAKAM", "MUHAMMAD TRISTAN ALIEF PRABOWO", "MUHAMMAD ZAKY AL HAFIZH FAUZAN", "NADYANDA MUCHALI AL MAJIID", "RESKI ARSY NEGARA", "SULTAN FAIZULLAH ATMIJOYO", "SYABANIN ALKAUTSAR IRAWAN", "SYAFIIQ AL-ATSARI", "UKASYAH ABDURROHMAN", "UWAIS", "YUSUF ABDURRAHMAN FANSURI"],
+        "7B": ["AHMAD KADHAFI BAFADHAL", "AHMAD QAIS ALHADI", "AKBAR MUHAMMAD FAISAL", "ALKA ZAHRAN SYAFIQ", "ANTO APANSA", "BISMA ABDILLAH SURA", "GIOFANDI AHNAF SYATIR", "IMRAN UMAR ALKATIRI", "JIKRAN ALFATIH MUDASIR", "KHANUKH MAHIR BAHASWAN", "LALU ABDURRAHMAN DZAKI KHAIRI", "LALU MUHAMMAD ISHAM HAWARI", "LALU TSAQIB AL MUHALY", "M. SHAFIQ MUBARAK", "M. SULTHAN HABIBULLAH", "M.IBAD FA'IQ ATHAR", "MIFZAL", "MUH.FAZRIL ILHAM", "MUHAMAD OZIL", "MUHAMMAD AIDIL GIFARI", "MUHAMMAD AKROM AL-FARUQ", "MUHAMMAD FAUZAN", "MUHAMMAD FAWWAZ ARRAYAN", "MUHAMMAD NABIIL SETIAWAN", "MUHAMMAD NAUFAL AL KHAIRY", "NAUFAL AL FAIZ", "PRANAJA AGHA SAFARAZ", "RADITYA NAUFAL ABIYYU", "RASYA MAULANA PRASETYO", "SAJID", "SYAFIQ ALBANY MUBARAK", "VIRZAN AL AZKA", "WAFI 'ABDULLOH", "YUSUF GIBRAN RAMADHAN", "ZAKI SALEH", "ZUBAIR AL FAYYAD"],
+        "7C": ["ABBASHY RIZQILLAH JULIANGKARA", "ABIDULLAH IBRAHIM HANIF", "ABRISAM FAQIH ABBASY", "ADHWA ASHAAD KAMIDIA", "AFKAR HAFIDZUL FAYYAD", "AHMAD AL GHAZALI", "AHSAN ABDULLAH", "ALI ABDULLAH AL BAKRI", "AMIR MUJAHID", "ANAS MUTTAQIN", "BAYU SAFA BUDI OZORA", "DANIL ZAKY AL HANIF", "FADHIL JAMAL HIZAM", "FATHIN ABDULLAH", "FATIH ARDIANSYAH MALIK", "HAIRUL AZZAM", "HAFIZ PRATAMA DINTAHA", "ISAM AL KHUSYAIRI", "KEENAN DANIAL ALFAREZEL", "KHAERUL HADI JAELANI", "MU'ADZ RIFKI AL BAKRI", "MUH. SHOLYHIN", "MUHAMMAD ABDURRAHMAN ABBASYI", "MUHAMMAD DHAFFA DZAKI PUTRA SANI", "MUHAMMAD EMIRSYAH SYAWAL", "MUHAMMAD FADLILLAH", "MUHAMMAD FAIZI ATHAR AL AYYUBI", "MUHAMMAD ILYAS", "MUHAMMAD QOIS FIRDAUS", "MUHAMMAD RUSYDI THALIB", "MUHAMMAD YAZID ALI", "NIZAR", "PATIH MUHAMMAD", "ZAIM MUBARAK IBNU RASYID"],
+        "7D": ["ABDURRAHMAN HALIM", "ABDURRAHMAN HANIF", "ABU DAFIF KHOLIS AR-ROTANIYY", "ADHITYA FATHAN NURRIZKILLAH", "AHMAD SULTAN NAZHIRUL ASROFI", "AINAN NEVAN INDRAJAYA", "ALBY RIEZKY RAMADHAN", "AMMAR", "DZAKY MAHESWARA", "FATHIAN AL AZZAM", "HAFUZA AGHANDHI ISPARWONO", "ILHAMY MUHAMMAD WAFI", "KHAIZURAN AZFARIL HAKIM", "KHALIL ABDUL JABBAR", "LALU MUHAMMAD FAWAAZ MUSTHOFA", "M. DHAFFA GIBRAN ARANTA", "M. HISYAM AL FATHIR", "M. SALMAN AZKAMIL", "M. AUFAR TRI IRZANI", "M. GIYAS AUFA", "MUHAMMAD AFIIF AL-HABSYI", "MUHAMMAD AHSAN ZAKI", "MUHAMMAD ALVIN FAIZ", "MUHAMMAD FALIH KASYFUL ISLAM", "MUHAMMAD FAQIH RIZQULLAH", "MUHAMMAD HAYYAN", "MUHAMMAD RAIHAN AL FATIH", "MUZAKKAR HALIM KHAIRI", "RAZA ARDYLAN AMIR", "SAMI", "SAMIR JAZLAN AL- HADI", "SULTAN MUHAMMAD ALFATI", "TIHAMI ABDUL MUZANNI A", "UBAIDURRAHMAN", "UMAR AL FARUQ"],
+        "7E": ["ABDURRAHMAN DIANUL GIBRAN", "ABIE ALFAYAD", "AHMAD DHANIS ALFARUQ", "AHMAD ZOFRAN JIHADI", "AHMAD ZUBAIR", "AZKA RAHARDHIAN ACHMAD", "AZKA ZAHRAN SYAFIQ", "DAFFA IBNU HAFIDZ", "DANIAL FARUQ ABDURROHMAN", "FARDAN FADLI", "FARUQ NABIL ARFADANA", "FATIR KAHFI RUMI", "HANIF ABDURRAHMAN", "HUSEIN ALI FARIS", "KHAIRIL INSANI RAMADHAN", "LALU APTA PAWANA SUPRON", "MUHAMAD ZIZFAN YADI MULIA", "MUHAMMAD ALGHAZALI SALMIN", "MUHAMMAD AMMAR", "MUHAMMAD ATAYA EL AZZAM", "MUHAMMAD BILAL HARYANTO", "MUHAMMAD FATHIIN RAMADHANI", "MUHAMMAD GALIH AS SAKHA", "MUHAMMAD KENZIE MAHIRA", "MUHAMMAD NAUFAL GHANI", "MUHAMMAD YUZARSIF", "MUHAMMAD ZAID ISA", "NIRHAM SAJIDAN", "RADEN ALI FIRAS RAHMATULLAH", "RAMBU RAYA RABBANI", "RIZKY RAMADHAN", "TARAGA PAMENGAS PIRATA", "THUFAIL ALBYAKSA DEBERNADI", "UMAR", "ZIYAN HAFIZURRAHMAN"],
         "8A": ["ABDULLAH AZZAM AL MANAR", "ABDURRAHMAN AL FAYADH", "ABDURRAHMAN FAQIH ALBANY", "ABIL MAJDI", "ALIEF HAFEES DINATA", "ARIF ALFIAN", "AZKA SURYA LOGIKA", "AZMI SUHAIL HIDAYAT", "AZZAM FAISHAL", "DEDEN HARDIANTO", "DINAN HADYAN HANIF", "HANIF ALTHAF RAMADHANI", "ILYAS AL-HAKIM", "ISA FEHER BAGIS", "LALU DANISH MIRZA AL FATIH MARTADINATA", "LALU IYAS ALI AHMAD", "M. DETHA ALGHIFARY", "M. FATONI", "MUHAMMAD AL AFIIF MAULANA", "MUHAMMAD ALBIMAWY", "MUHAMMAD ALFA AL HAWARI", "MUHAMMAD BILAL", "MUHAMMAD DHORFAN FUADY", "MUHAMMAD IRSYAD HAFIDZ", "MUHAMMAD IZWAR RASYID", "MUHAMMAD LUTHFI APRIAN NABHAN", "MUHAMMAD NIZZAM KHARISMA", "MUHAMMAD SULTAN", "MUHAMMAD ZHAFIR ATZANY", "MUSTAGFIRI ASROR", "NABHAN KHALIL", "NIZAM", "TAMIM ABDILLAH", "THORIQ SALAM", "UMAIR AL JUNDI", "YAZID AWAD SEWET"],
         "8B": ["ABBAS", "ABDUL AZIZULHAKIM", "ABDURRAHMAN KHADAFI", "ABDURROHMAN AR-ROSYAD WARDOYO", "AHMAD MUSAYYIB", "AHMAD NUBLI ALFATIH", "AZHALLAH ZAYAN AGHLA", "DHANIZAM AZ ZIKRI KASYAFANI AHMAD", "FIRAS FAWAZ FATIH", "FURQAN ALFATIR", "HISYAM RIZKI HIDAYAT", "KHALID ATTAURIQ", "KHAN KARTAWIJAYA MADANI", "MUHAMAD ILHAM BINTANG", "MUHAMAD REZKY AFKHAR", "MUHAMMAD AL FATIH", "MUHAMMAD AZAM FARZANA", "MUHAMMAD AZMI", "MUHAMMAD DINZA ALKHALIFI", "MUHAMMAD FACHRI EL FIRAZ", "MUHAMMAD FADHIL", "MUHAMMAD FARHAN FURQON", "MUHAMMAD FATHIN RIDWAN", "MUHAMMAD HAMIZ JAFAR", "MUHAMMAD IBNU FARIS", "MUHAMMAD RAYHAN RAFASYA AL ZHAFRAN", "MUHAMMAD SALEH", "NALA FAUZAN ADZIMA", "NARARYA AZKA RAMADHAN", "NIDZAM QOSIM", "SHALLBAR MALIK JABBAR ISMAIL", "SYAHIDURRAHMAN", "TYAZQIRO ALIF SURYADIN", "UNAIS HANIF BUDIMAN", "YAZID ABDURRAHMAN", "ZAIM OZIL SYAHMI"],
-        "8C": ["ABDURRAHMAN AL-FURQON", "AHDA SYAKIRUL AFKAR", "AINUL RIZKY", "ALI FAHREZA RAMADHAN", "AUFAR BILAL SYAFIQ", "BARIQ ABDUL AFIF", "DANARHADIYYA AGRI", "EMHA RAYYAN HAIKAL AL HAKIM", "FIRDAUSI NUZULA", "FITRAH KAMULA TALIANG", "HAQQY HAYAZA", "HASAN USMAN SEWET", "KHAIRUL MIZAN", "KINAN SAMAU'AL RAHMAN", "MUHAMMAD ABBAD", "MUHAMMAD AHSANUL FATHIR", "MUHAMMAD ALVITO ATHARIZ BAYNUKHO", "MUHAMMAD ARFA AL FAWWAZI", "MUHAMMAD DIFA ELRAFIF", "MUHAMMAD FADHIL", "MUHAMMAD FAID ADLIHAQ", "MUHAMMAD HAFIDZ", "MUHAMMAD ILHAM BADRUSSALAM", "MUHAMMAD KHALIFA GHAISANI", "MUHAMMAD SALMAN AL FARISI", "MUSYARI ROSYID", "NAUFAL ADINURRAHMAN", "NAYIF ALQADRI", "QUSAY", "SALEM OSAMA MA'DAN", "SALIM ABDULLAH GUNAWAN", "SYAHMI ZABIR", "SYAKIR", "UWAYS ABDURRAHMAN", "WIFA ASYROFI"],
-        "8D": ["ALFATH BHUMI ARSAKHA", "ARSHALAN MUHAMMAD FERALVO", "ATAN ALFATIH TOSAMAN", "ATMADEVA HAYUMERTA", "AUFA IMADUDDIN", "BUMI ABDI NEGARA", "DZAKWAN TSAMIR ARRAHMAN", "FATHIR AKMAL RABBANI", "FATHIR ALI AL HUSSEINI", "FAWWAZ BADRUTAMAM", "FAYAD FADILAH FAIRUZ AMANULLAH", "HANIF HAWARI", "KHALID ALHUDRI", "LALU AKHTAR TSAQIF GUNAWAN", "LALU AZZAM ABDURRAASYID ROMADHONI", "LALU MUHAMMAD ZEVIAN ALTHAF", "M APRIANSYAH", "M. DZAKWAN KHAFADY", "M.SAYYID RAZIQ AL FATIH", "MAULANA KHALIL ACHMAD", "MUHAMAD RIZKY KATSIRO", "MUHAMMAD AFLAH KHALAF KASMAN", "MUHAMMAD FARID AZFAR", "MUHAMMAD HABIB ASLAM", "MUHAMMAD LUKMAN ALFAIQ", "MUHAMMAD NAYYIF", "MUHAMMAD RAIHAN PUTRA FIRMANDA", "MUHAMMAD RIZKI ANUGRAH", "MUHAMMAD RIZKY ALHAKIM", "MUHAMMAD SYAFIQ ARKAN", "MUHAMMAD SYAHRIZA RIVAI", "NIKO SATYA ATMAJA", "RIDHO MARTA DINATA", "YUSUF KAMIL", "ZAID UBAIDILLAH"],
+        "8C": ["ABDURRAHMAN AL-FURQON", "AHDA SYAKIRUL AFKAR", "AINUL RIZKY", "ALI FAHREZA RAMADHAN", "AUFAR BILAL SYAFIQ", "BARIQ ABDUL AFIF", "DANARHADIYYA AGRI", "EMHA RAYYAN HAIKAL AL HAKIM", "FIRDAUSI NUZULA", "FITRAH KAMULA TALIANG", "HAQQY HAYAZA", "HASAN USMAN SEWET", "KHAIRIL MIZAN", "KINAN SAMAU'AL RAHMAN", "MUHAMMAD ABBAD", "MUHAMMAD ALVITO ATHARIZ BAYNUKHO", "MUHAMMAD ARFA AL FAWWAZI", "MUHAMMAD DIFA ELRAFIF", "MUHAMMAD FADHIL", "MUHAMMAD FAID ADLIHAQ", "MUHAMMAD HAFIDZ", "MUHAMMAD ILHAM BADRUSSALAM", "MUHAMMAD KHALIFA GHAISANI", "MUHAMMAD SALMAN AL FARISI", "MUSYARI ROSYID", "NAUFAL ADINURRAHMAN", "NAYIF ALQADRI", "QUSAY", "RASHA MUHAMMAD ATHAYA", "SALEM OSAMA MA'DAN", "SALIM ABDULLAH GUNAWAN", "SYAHMI ZABIR", "SYAKIR", "UWAYS ABDURRAHMAN", "WIFA ASYROFI"],
+        "8D": ["ALFATH BHUMI ARSAKHA", "ARSHALAN MUHAMMAD FERALVO", "ATAN ALFATIH TOSAMAN", "ATMADEVA HAYUMERTA", "AUFA IMADUDDIN", "BUMI ABDI NEGARA", "DZAKWAN TSAMIR ARRAHMAN", "FATHIR AKMAL RABBANI", "FATHIR ALI AL HUSSEINI", "FAWWAZ BADRUTAMAM", "FAYAD FADILAH FAIRUZ AMANULLAH", "HANIF HAWARI", "KHALID ALHUDRI", "LALU AKHTAR TSAQIF GUNAWAN", "LALU AZZAM ABDURRAASYID ROMADHONI", "LALU MUHAMMAD ZEVIAN ALTHAF", "M APRIANSYAH", "M. DZAKWAN KHAFADY", "M. SAYYID RAZIQ AL FATIH", "MAULANA KHALIL ACHMAD", "MUHAMAD RIZKY KATSIRO", "MUHAMMAD AFLAH KHALAF KASMAN", "MUHAMMAD FARID AZFAR", "MUHAMMAD HABIB ASLAM", "MUHAMMAD LUKMAN ALFAIQ", "MUHAMMAD NAYYIF", "MUHAMMAD RAIHAN PUTRA FIRMANDA", "MUHAMMAD RIZKI ANUGRAH", "MUHAMMAD RIZKY ALHAKIM", "MUHAMMAD SYAFIQ ARKAN", "MUHAMMAD SYAHRIZA RIVAI", "NIKO SATYA ATMAJA", "RIDHO MARTA DINATA", "YUSUF KAMIL", "ZAID UBAIDILLAH"],
         "8E": ["ABDURRAHMAN AHMAD", "ABDURRAHMAN ZAYID", "ADITYA PUTRA WIDANI", "ADZKA INSANUL ARIF", "AMMAR ABDURRAZZAQ", "ANUGERAH RAZA KHASYI", "ATFAL RAMADHAN", "ATHIF", "AYMAN SULTAN AYUBI", "BILAL", "DEKA SAMUDERA", "FATHI AIMAN EL HARIS", "FATHIR DZAKWAN RAMADHAN", "FATIH EL ROZZA", "FI ZHILALIT TAUHID", "FURQON AZKA IBRAHIM", "IBNU NABIL MANULLANG", "JA'FAR ABDUL HALIM", "KAFKA APUILA", "LALU BASRI RAHMAN", "LALU SANDY AL FARISI", "M. ALI SAPUTRA HIDAYAT", "M. ALIF SIDIK", "M. RIZKY FANRI ADHA", "MOCHAMMAD RAYSHA OEMAR", "MUH.UWAIS AL QORNI", "MUHAMMAD ARSYAD AL BUKHORI", "MUHAMMAD FATHIH", "MUHAMMAD GHOFIQI ARRAYYAN", "MUHAMMAD RAFIE IBRAHIM", "MUHAMMAD UWAIS AL QORNY", "MUHAMMAD ZIBAN", "MUHAMMAD ZIDAN ALI AKBAR", "NAUFAL RIZKY ADZ-DZAKY", "NAVILA AL KAUSAR"],
         "9A": ["ABDILLAH FAWAZ ADZZIKRY", "AHMAD ALIFADWAN DZAKIRMANSYAH", "AHZA IMTIAS", "ALTAIR FATIH MUHAMMAD", "AMIRUL SHOLEH", "ASLAM AROFI", "BAGAS ERVITO", "FARIS RAFIE AS'ARY", "FAYYADH IFAT ASSYARIF", "GHAISAN HARISANDY", "IYADH IBNU MUNAWAR", "KHAIRIL FAHMI HUDA", "L. FERDIANSYAH AMMAR AL-FATIH", "LALU EZRA RAFEE AL RASYID", "M. FADHIL ZAHRAN", "M. FIKRI AZHARI", "M. NAYAKA ABHIYANTA AL FAYYADH", "M. ZIYAN HALIM", "MOH. ZAKY FIRMANSYAH", "MUHAMMAD", "MUHAMMAD AHLAM DZULFADLI", "MUHAMMAD ARKHA IBRA SURYA", "MUHAMMAD BAGAS PRATAMA", "MUHAMMAD FATHIN", "MUHAMMAD ZAHY IZDIHAR SYARIEF", "MUHAMMAD ZHAFRAN ARKAN", "TEGUH LINGGA AZHARI", "UMAIR", "ZENITH ZETTA RINJANI"],
         "9B": ["ABDULLAH FAWWAZ SALIM", "ABDURAHIM ZHORIF", "AFFAN EL RAFIF", "AHMAD ABAS", "ARIF RAHMAN", "DIHYAH AFNAN", "FATHIR MUBARAK BIN TAHIR", "HAIKAL KAMAL", "HUDZAIFAH AL GHAZWAN", "HUMAINI HANDREANANTO", "HUSAIN ABDURACHMAN SEWET", "IZAS MUHAMAD ALFATIH", "JIYAD MUNTASHIR", "M. FAHARIL", "M. RAYHAN AS-SYAWAL", "M. ZIYADFAIZAN ALFIJMI", "MOH AMIN ALKHOLIDIN", "MU'AFA KHOIR MIDROR", "MUHAMMAD ALFARIDZZY", "MUHAMMAD ALTAF", "MUHAMMAD FADIL AL FARISI", "MUHAMMAD ISA", "MUHAMMAD YUSUF MIRZA HIDAYATULLAH", "MUHAMMAD ZIAN ABDULLAH", "NADHIF SYAIKUL ISLAM", "NAUFAL FAUZI", "RAZZAN ABIYYU ASSABIL", "RIFQY HANIF MAULANA", "RIJAL AYMAN HASAN", "SALEH FATHY BOBSAID", "SYAMIL YASSIR BALBEID", "THORIQ MOHAMAD ZIYAD", "YAZID ACHMAD SYAFIQ BAGIS"],
-        "9C": ["ADZKA RAFA AL FATIH", "AFFAN KHATIBUL UMAM", "AHMAD FAWWAZ AFIFI", "AYYUB", "AZFARI AL BUKHARI", "DANIAL AZZAM ADYATMA", "FAHIM ABDULLOH", "FAHRI ZAFRAN KHAIRI", "FAIRUZ ALMA DZAKI", "FARZAN ALMER SHAKY", "FATHIR SAYYAF HAJID", "FAWWAZ SYAMIL GHIFARI", "HANIF RAZIN ATHALLAH", "IKHWAN ZHAFRAN ARIYANTONO", "ILYAS HELMI HIZAM", "ILYAS MUJAHID AKBAR", "JAVA RAJENDRA AL WAFI", "LALU MUHAMMAD YAZID MAULANA", "MUHAMAD RHEZA DWI PUTRA", "MUHAMMAD DAFFA AR RAYYAN", "MUHAMMAD FARRAS ALIMUDDIN", "MUHAMMAD JALILUDIN AL HAFIDZ", "MUHAMMAD MUSA", "MUHAMMAD RIFAL FADLAN", "MUHAMMAD RIFQI AKBAR", "MUHAMMAD YAFI' 'AMMAR Y.", "MUJAHIDIN", "MUSH'AB RIFKI AL BAKRI", "SABIQ ELFATTAN KURNIAWAN", "UWAIS BIN LUTHFIE ABDAT", "YAZID ABDUL QODIR", "ZIYAN FAKHRI"],
+        "9C": ["ADZKA RAFA AL FATIH", "AFFAN KHATIBUL UMAM", "AHMAD FAWWAZ AFIFI", "AYYUB", "AZFARI AL BUKHARI", "DANIAL AZZAM ADYATMA", "FAHIM ABDULLOH", "FAHRI ZAFRAN KHAIRI", "FAIRUZ ALMA DZAKI", "FARZAN ALMER SHAKY", "FATHIR SAYYAF HAJID", "FAWWAZ SYAMIL GHIFARI", "HANIF RAZIN ATHALLAH", "IKHWAN ZHAFRAN ARIYANTONO", "ILYAS HELMI HIZAM", "ILYAS MUJAHID AKBAR", "JAVA RAJENDRA AL WAFI", "LALU MUHAMMAD YAZID MAULANA", "MUHAMAD RHEZA DWI PUTRA", "MUHAMMAD DAFFA AR RAYYAN", "MUHAMMAD FARRAS ALIMUDDIN", "MUHAMMAD JALILUDIN AL HAFIDZ", "MUHAMMAD MUSA", "MUHAMMAD RIFAL FADLAN", "MUHAMMAD RIFQI AKBAR", "MUHAMMAD YAFI' 'AMMAR Y.", "MUHAMMAD ZAIN", "MUJAHIDIN", "MUSH'AB RIFKI AL BAKRI", "SABIQ ELFATTAN KURNIAWAN", "UWAIS BIN LUTHFIE ABDAT", "YAZID ABDUL QODIR", "ZIYAN FAKHRI"],
         "9D": ["ABDULLAH HIDAYAT", "ABDULLAH SYAMIL HAIDAR", "AGUNG RIZKY PRASOJO", "AHMAD RAFIQ", "AKHTAR NIZAM BUKHARI", "ALBY FACHRI", "ALIF SYAFIQ IBRAHIM", "ALIIF RASYID MUZHAFFAR", "ARVIN NAOVAL SARIP", "AUFAR AZKA SHIDDIQ", "DAVI CHANDRA ELMESSIA", "DAYYAN ALHANIF HARYONO", "DEFRAN AIMAR BAFADAL", "ELANG PUTRA AMRULLAH", "GALIH MAHER ABDULLAH", "GHUDZAMIR NURHAN HAJIRI", "LALU MAHARAYA SAKHA SUADAYA", "MOHAMAD ATHAA ASQOLANIY", "MUH. HILMI", "MUHAMAD HILMI FAIQ TAUFIK", "MUHAMMAD AL FATIH RAHMAN", "MUHAMMAD JIHADUL ISLAM", "MUHAMMAD NAWWAF AL MUSTAWI", "MUHAMMAD YUSUF BALWE'EL", "NUR ADAM AL-KHALIDY", "RAAFA ASYURO", "SAYYID ABDILLAH HANIF", "SUDAIS GHIZLAN GHIFARRY", "SYAFIIQ ABDULLAH AL BAKRI", "UQBAH UBAIDILLAH KAUTSAR", "USAID", "YUSUF MUSTAFA"]
-    };
+  };
 
   const SANTRI_LIST = [];
   for (const kelas in DATA_SANTRI) {
-    DATA_SANTRI[kelas].forEach(nama => {
-      SANTRI_LIST.push(`${nama} (${kelas})`);
-    });
+    DATA_SANTRI[kelas].forEach(nama => SANTRI_LIST.push(`${nama} (${kelas})`));
   }
 
-  // DOM Elements
+  // --- IndexedDB Setup ---
+  const dbName = 'SantriDatabase';
+  const storeName = 'photos';
+  let db;
+  let savedPhotosCache = {};
+
+  function initDB() {
+    const request = indexedDB.open(dbName, 1);
+    request.onerror = (e) => console.error("Database error:", e.target.errorCode);
+    request.onsuccess = (e) => {
+      db = e.target.result;
+      loadCacheFromDB();
+    };
+    request.onupgradeneeded = (e) => {
+      db = e.target.result;
+      if (!db.objectStoreNames.contains(storeName)) {
+        db.createObjectStore(storeName, { keyPath: 'id' });
+      }
+    };
+  }
+
+  function loadCacheFromDB() {
+    const transaction = db.transaction([storeName], 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = store.getAll();
+    request.onsuccess = () => {
+      request.result.forEach(record => {
+        savedPhotosCache[record.id] = record.photoData;
+      });
+    };
+  }
+
+  initDB();
+
+  // --- DOM Elements ---
+  const classFilter = document.getElementById('classFilter');
   const searchInput = document.getElementById('searchSantriInput');
   const suggestionBox = document.getElementById('suggestionBox');
   const videoElement = document.getElementById('videoElement');
   const canvasElement = document.getElementById('canvasElement');
-  const cameraContainerBox = document.getElementById('cameraContainerBox');
+  
   const captureBtn = document.getElementById('captureBtn');
-  const fsCaptureBtn = document.getElementById('fsCaptureBtn');
-  const closeFsBtn = document.getElementById('closeFsBtn');
+  const cancelCameraBtn = document.getElementById('cancelCameraBtn'); 
   const retakeBtn = document.getElementById('retakeBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const saveAndDownloadBtn = document.getElementById('saveAndDownloadBtn');
+  
   const cameraArea = document.getElementById('cameraArea');
   const previewArea = document.getElementById('previewArea');
   const imagePreview = document.getElementById('imagePreview');
-  const uploadBtn = document.getElementById('uploadBtn');
-  const loadingSpinner = document.getElementById('loadingSpinner');
 
-  let base64PhotoData = '';
+  const openFolderBtn = document.getElementById('openFolderBtn');
+  const closeFolderBtn = document.getElementById('closeFolderBtn');
+  const galleryModal = document.getElementById('galleryModal');
+  const galleryGrid = document.getElementById('galleryGrid');
+  
+  const backupZipBtn = document.getElementById('backupZipBtn');
+  const zipLoadingOverlay = document.getElementById('zipLoadingOverlay');
+
+  let currentPhotoData = '';
+  let selectedNameRaw = '';
   let streamRef = null;
 
-  // --- LOGIKA PENCARIAN (AUTOCOMPLETE) ---
+  // --- POPULASI DATA KELAS KE DROPDOWN ---
+  function populateClassDropdown() {
+    for (const kelas in DATA_SANTRI) {
+      const option = document.createElement('option');
+      option.value = kelas;
+      option.textContent = `Kelas ${kelas}`;
+      classFilter.appendChild(option);
+    }
+  }
+  populateClassDropdown();
+
+  // --- KONTROL KAMERA ---
+  async function startCamera() {
+    if (streamRef) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
+      });
+      videoElement.srcObject = stream;
+      streamRef = stream;
+    } catch (err) {
+      alert("Akses kamera gagal. Pastikan browser memiliki izin kamera.");
+    }
+  }
+
+  function stopCamera() {
+    if (streamRef) {
+      streamRef.getTracks().forEach(track => track.stop());
+      videoElement.srcObject = null;
+      streamRef = null;
+    }
+  }
+
+  // --- LOGIKA PENCARIAN & FILTER KELAS ---
   function showSuggestions(query) {
-    if (!query.trim()) { suggestionBox.style.display = 'none'; return; }
+    const selectedClass = classFilter.value;
     
-    const filtered = SANTRI_LIST.filter(s => s.toLowerCase().includes(query.toLowerCase()));
+    // Saring berdasarkan kelas (jika ada)
+    let filtered = SANTRI_LIST;
+    if (selectedClass) {
+      filtered = filtered.filter(s => s.endsWith(`(${selectedClass})`));
+    }
+    
+    // Jangan munculkan apa-apa jika query kosong DAN kelas belum dipilih
+    if (!query.trim() && !selectedClass) { 
+      suggestionBox.style.display = 'none'; 
+      return; 
+    }
+    
+    // Saring berdasarkan ketikan
+    if (query.trim()) {
+      filtered = filtered.filter(s => s.toLowerCase().includes(query.toLowerCase()));
+    }
+    
     suggestionBox.innerHTML = '';
     
-    if (filtered.length === 0) { suggestionBox.style.display = 'none'; return; }
+    if (filtered.length === 0) { 
+      suggestionBox.style.display = 'none'; 
+      return; 
+    }
     
     filtered.forEach(item => {
       const div = document.createElement('div');
       div.className = 'suggestion-item';
+      
+      const hasPhoto = savedPhotosCache[item];
       const regex = new RegExp(`(${query})`, "gi");
-      div.innerHTML = item.replace(regex, "<strong>$1</strong>");
+      const highlightedText = query.trim() ? item.replace(regex, "<strong>$1</strong>") : item;
+
+      div.innerHTML = `
+        ${hasPhoto ? `<img src="${hasPhoto}" class="thumb-preview">` : `<div class="thumb-placeholder"><i class="fas fa-user"></i></div>`}
+        <div class="suggestion-text">
+          <span>${highlightedText}</span>
+          ${hasPhoto ? `<span class="status-text"><i class="fas fa-check-circle"></i> Foto Tersedia</span>` : ''}
+        </div>
+      `;
       
       div.addEventListener('click', () => {
         searchInput.value = item;
+        selectedNameRaw = item;
         suggestionBox.style.display = 'none';
+        
+        saveAndDownloadBtn.style.display = hasPhoto ? 'none' : 'flex';
+
+        if (hasPhoto) {
+          currentPhotoData = hasPhoto;
+          imagePreview.src = hasPhoto;
+          stopCamera();
+          cameraArea.style.display = 'none';
+          previewArea.style.display = 'flex';
+          downloadBtn.style.display = 'flex';
+        } else {
+          currentPhotoData = '';
+          previewArea.style.display = 'none';
+          downloadBtn.style.display = 'none';
+          cameraArea.style.display = 'flex';
+          startCamera();
+        }
       });
       suggestionBox.appendChild(div);
     });
     suggestionBox.style.display = 'block';
   }
 
+  // Event listener untuk input teks dan fokus
   searchInput.addEventListener('input', (e) => showSuggestions(e.target.value));
+  searchInput.addEventListener('focus', (e) => showSuggestions(e.target.value)); // Tampilkan saat di-klik
+  
+  // Jika filter kelas diubah, bersihkan pencarian dan tampilkan isi kelas itu
+  classFilter.addEventListener('change', () => {
+    searchInput.value = '';
+    showSuggestions('');
+  });
+
   document.addEventListener('click', function(event) {
-    if (!searchInput.contains(event.target) && !suggestionBox.contains(event.target)) {
+    if (!searchInput.contains(event.target) && !suggestionBox.contains(event.target) && !classFilter.contains(event.target)) {
       suggestionBox.style.display = 'none';
     }
   });
 
-  // --- LOGIKA KAMERA (WebRTC) ---
-  async function startCamera() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } 
-      });
-      videoElement.srcObject = stream;
-      streamRef = stream;
-    } catch (err) {
-      alert("Gagal mengakses kamera. Pastikan browser memiliki izin akses kamera. Error: " + err);
-    }
-  }
+  // --- BATALKAMERA, JEPRET & RETAKE ---
+  cancelCameraBtn.addEventListener('click', () => {
+    stopCamera();
+    cameraArea.style.display = 'none';
+    searchInput.value = '';        
+    selectedNameRaw = '';
+    currentPhotoData = '';
+    saveAndDownloadBtn.style.display = 'none';
+    // classFilter sengaja tidak di-reset agar user bisa lanjut ke anak berikutnya di kelas yang sama
+  });
 
-  window.addEventListener('load', startCamera);
-
-  // Buka mode Fullscreen saat tombol ditekan
   captureBtn.addEventListener('click', () => {
-    cameraContainerBox.classList.add('fullscreen-mode');
-  });
+    const MAX_DIMENSION = 1280;
+    let width = videoElement.videoWidth;
+    let height = videoElement.videoHeight;
 
-  // Tutup mode Fullscreen (Cancel)
-  closeFsBtn.addEventListener('click', () => {
-    cameraContainerBox.classList.remove('fullscreen-mode');
-  });
+    if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+      if (width > height) {
+        height = Math.round((height * MAX_DIMENSION) / width);
+        width = MAX_DIMENSION;
+      } else {
+        width = Math.round((width * MAX_DIMENSION) / height);
+        height = MAX_DIMENSION;
+      }
+    }
 
-  // Fungsi Eksekusi Jepret Foto
-  function takeSnapshot() {
-    canvasElement.width = videoElement.videoWidth;
-    canvasElement.height = videoElement.videoHeight;
+    canvasElement.width = width;
+    canvasElement.height = height;
     const context = canvasElement.getContext('2d');
+    context.drawImage(videoElement, 0, 0, width, height);
     
-    context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-    const dataUrl = canvasElement.toDataURL('image/jpeg', 0.8);
+    const dataUrl = canvasElement.toDataURL('image/jpeg', 0.85); 
     
     imagePreview.src = dataUrl;
-    base64PhotoData = dataUrl.split(',')[1];
+    currentPhotoData = dataUrl;
     
-    // Keluar dari mode fullscreen dan ubah tampilan area
-    cameraContainerBox.classList.remove('fullscreen-mode');
+    stopCamera(); 
     cameraArea.style.display = 'none';
     previewArea.style.display = 'flex';
-  }
-
-  fsCaptureBtn.addEventListener('click', takeSnapshot);
-
-  retakeBtn.addEventListener('click', () => {
-    base64PhotoData = '';
-    cameraArea.style.display = 'flex';
-    previewArea.style.display = 'none';
+    downloadBtn.style.display = 'none';
+    saveAndDownloadBtn.style.display = 'flex';
   });
 
-  // --- FUNGSI UPLOAD ---
-  function parseSantri(full) {
-    const match = full.match(/^(.*?)\s*\(([^)]+)\)$/);
-    if (match) {
-      return { nama: match[1].trim(), kelas: match[2].trim() };
-    }
-    return { nama: full.trim(), kelas: '-' };
+  retakeBtn.addEventListener('click', () => {
+    currentPhotoData = '';
+    previewArea.style.display = 'none';
+    downloadBtn.style.display = 'none';
+    saveAndDownloadBtn.style.display = 'none';
+    cameraArea.style.display = 'flex';
+    startCamera(); 
+  });
+
+  // --- FUNGSI AUTO DOWNLOAD ---
+  function triggerDownload(dataUrl, rawNameStr) {
+    const match = rawNameStr.match(/^(.*?)\s*\(([^)]+)\)$/);
+    const namaBersih = match ? match[1].trim() : rawNameStr;
+    const kelas = match ? match[2].trim() : '';
+    const filename = `${kelas}-${namaBersih}.jpg`;
+
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
-  uploadBtn.addEventListener('click', async () => {
+  // --- SIMPAN DB & UNDUH LALU RESET UI TAPI TETAPKAN KELAS ---
+  saveAndDownloadBtn.addEventListener('click', () => {
     const rawName = searchInput.value.trim();
-    if (!rawName) {
-      alert('Silakan pilih nama santri dari daftar pencarian terlebih dahulu!');
-      searchInput.focus();
-      return;
-    }
-    if (!base64PhotoData) {
-      alert('Silakan jepret foto santri terlebih dahulu!');
-      return;
-    }
+    if (!rawName || !currentPhotoData) return;
 
-    const { nama, kelas } = parseSantri(rawName);
+    const transaction = db.transaction([storeName], 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const dataObj = { id: rawName, photoData: currentPhotoData, timestamp: new Date().toISOString() };
+    const request = store.put(dataObj);
     
-    // --- PERUBAHAN POLA NAMA FILE DISINI ---
-    // Format: KELAS-NAMA_Timestamp.jpg (Spasi pada nama diubah menjadi underscore agar ramah sistem file)
-    const formattedNama = nama.replace(/\s+/g, '_');
-    const filename = `${kelas}-${formattedNama}_${new Date().getTime()}.jpg`;
-
-    const payload = {
-      nama: nama,
-      kelas: kelas,
-      photoData: base64PhotoData,
-      mimeType: 'image/jpeg',
-      filename: filename
+    request.onsuccess = () => {
+      savedPhotosCache[rawName] = currentPhotoData;
+      triggerDownload(currentPhotoData, rawName);
+      
+      // RESET UI KE TAMPILAN AWAL (TAPI classFilter TIDAK BERUBAH)
+      stopCamera();
+      cameraArea.style.display = 'none';
+      previewArea.style.display = 'none';
+      searchInput.value = '';
+      selectedNameRaw = '';
+      currentPhotoData = '';
+      saveAndDownloadBtn.style.display = 'none';
+      downloadBtn.style.display = 'none';
     };
+  });
 
-    uploadBtn.disabled = true;
-    uploadBtn.innerHTML = 'Menyimpan...';
-    loadingSpinner.style.display = 'flex';
+  // --- FUNGSI UNDUH SAJA ---
+  downloadBtn.addEventListener('click', () => {
+    if (!selectedNameRaw || !currentPhotoData) return;
+    triggerDownload(currentPhotoData, selectedNameRaw);
+  });
 
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
+  // --- MODAL RIWAYAT TERSIMPAN ---
+  openFolderBtn.addEventListener('click', () => {
+    galleryGrid.innerHTML = '';
+    const keys = Object.keys(savedPhotosCache);
+    
+    if (keys.length === 0) {
+      galleryGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">Belum ada foto yang tersimpan.</p>';
+    } else {
+      keys.forEach(key => {
+        const div = document.createElement('div');
+        div.className = 'gallery-item';
+        div.innerHTML = `<img src="${savedPhotosCache[key]}" alt="${key}"><span>${key}</span>`;
+        galleryGrid.appendChild(div);
       });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        alert('✅ Foto berhasil disimpan ke server!');
-        searchInput.value = '';
-        retakeBtn.click();
-      } else {
-        alert('❌ Gagal menyimpan: ' + result.message);
-      }
-    } catch (error) {
-      alert('⚠️ Terjadi kesalahan jaringan. Error: ' + error.message);
-    } finally {
-      uploadBtn.disabled = false;
-      uploadBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Simpan ke Database';
-      loadingSpinner.style.display = 'none';
     }
+    
+    galleryModal.style.display = 'flex';
+  });
+
+  closeFolderBtn.addEventListener('click', () => {
+    galleryModal.style.display = 'none';
+  });
+
+  // --- FUNGSI EXPORT / BACKUP KE ZIP ---
+  backupZipBtn.addEventListener('click', () => {
+    const transaction = db.transaction([storeName], 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = store.getAll();
+
+    request.onsuccess = async () => {
+      const records = request.result;
+      if (records.length === 0) {
+        alert('Database kosong. Belum ada foto yang bisa di-backup.');
+        return;
+      }
+
+      zipLoadingOverlay.style.display = 'flex';
+
+      try {
+        const zip = new JSZip();
+        const folder = zip.folder("Backup_Foto_Santri");
+
+        records.forEach(record => {
+          const match = record.id.match(/^(.*?)\s*\(([^)]+)\)$/);
+          const nama = match ? match[1].trim() : record.id;
+          const kelas = match ? match[2].trim() : 'Unknown';
+          const filename = `${kelas}-${nama.replace(/\s+/g, '_')}.jpg`;
+          const base64Data = record.photoData.split(',')[1];
+          folder.file(filename, base64Data, {base64: true});
+        });
+
+        const content = await zip.generateAsync({type: "blob"});
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const zipFilename = `Backup_Foto_Santri_${dateStr}.zip`;
+
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(content);
+        a.download = zipFilename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+
+        alert(`✅ Berhasil! File ZIP berisi ${records.length} foto telah diunduh.`);
+      } catch (error) {
+        alert('❌ Terjadi kesalahan saat membuat ZIP: ' + error.message);
+      } finally {
+        zipLoadingOverlay.style.display = 'none';
+      }
+    };
+    
+    request.onerror = () => {
+      alert('❌ Gagal membaca database aplikasi.');
+    };
   });
 </script>
 </body>
