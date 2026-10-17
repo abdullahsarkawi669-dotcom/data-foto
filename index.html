@@ -103,7 +103,6 @@
 
     hr { border: 0; border-top: 1px dashed #cbd5e1; margin: 4px 0; }
 
-    /* Pengaturan Area Kamera Desktop */
     .camera-section { display: flex; flex-direction: column; gap: 12px; }
     .camera-container {
       width: 100%; border-radius: 16px; overflow: hidden; background: #000; position: relative;
@@ -122,7 +121,6 @@
     .btn-success { background: var(--success); color: white; }
     .action-buttons { display: flex; gap: 10px; margin-top: 10px; }
 
-    /* LAYAR PENUH UNTUK HP (MOBILE) */
     @media (max-width: 768px) {
       .camera-section {
         position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -138,7 +136,6 @@
       }
       video, #imagePreview { width: 100%; height: 100%; object-fit: cover; }
       
-      /* Tombol mengambang (floating) di atas kamera pada HP */
       .action-buttons {
         position: absolute; bottom: 30px; left: 20px; right: 20px;
         z-index: 10001; margin-top: 0;
@@ -159,9 +156,19 @@
     .close-modal { background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; }
     .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 16px; }
     
-    .gallery-item { display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
+    /* Penyesuaian area Gallery agar tombol Hapus bisa floating di pojok */
+    .gallery-item { position: relative; display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
     .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 12px; border: 1px solid var(--border-color); }
     .gallery-item span { font-size: 11px; font-weight: 600; line-height: 1.3; word-break: break-word; }
+
+    /* Tombol Hapus Foto di Riwayat */
+    .delete-photo-btn {
+      position: absolute; top: 6px; right: 6px; background: rgba(239, 68, 68, 0.9);
+      color: white; border: none; border-radius: 50%; width: 28px; height: 28px;
+      font-size: 12px; cursor: pointer; display: flex; justify-content: center; align-items: center;
+      transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .delete-photo-btn:hover { background: #dc2626; transform: scale(1.1); }
 
     #zipLoadingOverlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9);
@@ -220,7 +227,6 @@
   </div>
 </div>
 
-<!-- Kamera Area (Dikeluarkan dari card-box agar bisa fullscreen sempurna di HP) -->
 <div id="cameraArea" class="camera-section" style="display: none;">
   <label><i class="fas fa-video"></i> Kamera Utama</label>
   <div class="camera-container">
@@ -232,7 +238,6 @@
   </div>
 </div>
 
-<!-- Pratinjau Area -->
 <div id="previewArea" class="camera-section" style="display: none;">
   <label><i class="fas fa-image"></i> Pratinjau Foto</label>
   <div class="camera-container">
@@ -242,12 +247,9 @@
     <button class="btn btn-danger" id="cancelPreviewBtn" style="flex: 1; min-width: 100px;"><i class="fas fa-times"></i> Batal</button>
     <button class="btn btn-secondary" id="retakeBtn" style="flex: 1; min-width: 120px;"><i class="fas fa-redo-alt"></i> Ganti Foto</button>
     
-    <!-- Tombol Simpan (untuk foto baru) -->
     <button class="btn btn-primary" id="saveAndDownloadBtn" style="flex: 2; display: none; min-width: 200px;">
       <i class="fas fa-save"></i> Simpan & Unduh Foto
     </button>
-    
-    <!-- Tombol Unduh Ulang (jika foto sudah ada sebelumnya) -->
     <button class="btn btn-success" id="downloadBtn" style="flex: 2; display: none; min-width: 200px;">
       <i class="fas fa-download"></i> Unduh Ulang
     </button>
@@ -256,7 +258,6 @@
 
 <canvas id="canvasElement" style="display: none;"></canvas>
 
-<!-- Modal Riwayat Tersimpan -->
 <div class="modal-overlay" id="galleryModal">
   <div class="modal-content">
     <div class="modal-header">
@@ -369,7 +370,6 @@
   async function startCamera() {
     if (streamRef) return;
     try {
-      // facingMode: 'environment' otomatis memanggil kamera belakang (jika ada) dan menyesuaikan orientasi layar (portrait)
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
       });
@@ -388,7 +388,6 @@
     }
   }
 
-  // --- FUNGSI RESET KE KEADAAN AWAL ---
   function resetToInitialState() {
     stopCamera();
     cameraArea.style.display = 'none';
@@ -396,7 +395,6 @@
     searchInput.value = '';
     selectedNameRaw = '';
     currentPhotoData = '';
-    // Pilihan kelas (classFilter) sengaja TIDAK di-reset agar bisa lanjut memfoto anak di kelas yang sama
   }
 
   // --- LOGIKA PENCARIAN & FILTER ---
@@ -455,11 +453,7 @@
 
   searchInput.addEventListener('input', (e) => showSuggestions(e.target.value));
   searchInput.addEventListener('focus', (e) => showSuggestions(e.target.value));
-  
-  classFilter.addEventListener('change', () => {
-    searchInput.value = '';
-    showSuggestions('');
-  });
+  classFilter.addEventListener('change', () => { searchInput.value = ''; showSuggestions(''); });
 
   document.addEventListener('click', function(event) {
     if (!searchInput.contains(event.target) && !suggestionBox.contains(event.target) && !classFilter.contains(event.target)) {
@@ -467,17 +461,15 @@
     }
   });
 
-  // --- EVENT TOMBOL BATAL ---
   cancelCameraBtn.addEventListener('click', resetToInitialState);
   cancelPreviewBtn.addEventListener('click', resetToInitialState);
 
   // --- LOGIKA JEPRET ---
   captureBtn.addEventListener('click', () => {
-    const MAX_DIMENSION = 1600; // Resolusi foto diturunkan sedikit jadi medium agar jelas namun tidak boros
+    const MAX_DIMENSION = 1600;
     let width = videoElement.videoWidth;
     let height = videoElement.videoHeight;
 
-    // Menghitung aspect ratio aktual yang menyesuaikan layar/orientasi device
     if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
       if (width > height) {
         height = Math.round((height * MAX_DIMENSION) / width);
@@ -493,16 +485,13 @@
     const context = canvasElement.getContext('2d');
     context.drawImage(videoElement, 0, 0, width, height);
     
-    // Kualitas medium/bagus (85% JPEG kompresi)
     const dataUrl = canvasElement.toDataURL('image/jpeg', 0.85); 
-    
     imagePreview.src = dataUrl;
     currentPhotoData = dataUrl;
     
     stopCamera(); 
     cameraArea.style.display = 'none';
     previewArea.style.display = 'flex';
-    
     downloadBtn.style.display = 'none';
     saveAndDownloadBtn.style.display = 'flex';
   });
@@ -514,7 +503,6 @@
     startCamera(); 
   });
 
-  // --- FUNGSI AUTO DOWNLOAD KE FOLDER DOWNLOADS ---
   function triggerDownload(dataUrl, rawNameStr) {
     const match = rawNameStr.match(/^(.*?)\s*\(([^)]+)\)$/);
     const namaBersih = match ? match[1].trim() : rawNameStr;
@@ -529,7 +517,6 @@
     document.body.removeChild(a);
   }
 
-  // --- SIMPAN DB, UNDUH & KEMBALI KE AWAL ---
   saveAndDownloadBtn.addEventListener('click', () => {
     const rawName = searchInput.value.trim();
     if (!rawName || !currentPhotoData) return;
@@ -543,19 +530,17 @@
       savedPhotosCache[rawName] = currentPhotoData;
       triggerDownload(currentPhotoData, rawName);
       alert('✅ Foto tersimpan dan berhasil diunduh!');
-      
       resetToInitialState();
     };
   });
 
-  // --- UNDUH ULANG (JIKA SUDAH ADA) ---
   downloadBtn.addEventListener('click', () => {
     if (!selectedNameRaw || !currentPhotoData) return;
     triggerDownload(currentPhotoData, selectedNameRaw);
   });
 
-  // --- MODAL RIWAYAT ---
-  openFolderBtn.addEventListener('click', () => {
+  // --- MODAL RIWAYAT DAN FUNGSI RENDER GALLERY ---
+  function renderGallery() {
     galleryGrid.innerHTML = '';
     const keys = Object.keys(savedPhotosCache);
     
@@ -565,13 +550,57 @@
       keys.forEach(key => {
         const div = document.createElement('div');
         div.className = 'gallery-item';
-        div.innerHTML = `<img src="${savedPhotosCache[key]}" alt="${key}"><span>${key}</span>`;
+        
+        // Buat Elemen Tombol Hapus
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-photo-btn';
+        delBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        delBtn.title = `Hapus foto ${key}`;
+        
+        // Logika Hapus Data
+        delBtn.addEventListener('click', () => {
+          if (confirm(`Yakin ingin menghapus foto ${key}?`)) {
+            const transaction = db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            store.delete(key).onsuccess = () => {
+              // Hapus dari cache internal
+              delete savedPhotosCache[key];
+              
+              // Hapus elemen dari tampilan Gallery
+              div.remove();
+              
+              // Jika galeri kosong setelah dihapus, tampilkan pesan kosong
+              if (Object.keys(savedPhotosCache).length === 0) {
+                galleryGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #64748b;">Belum ada foto yang tersimpan.</p>';
+              }
+            };
+          }
+        });
+
+        // Elemen Gambar
+        const img = document.createElement('img');
+        img.src = savedPhotosCache[key];
+        img.alt = key;
+
+        // Elemen Teks Nama
+        const span = document.createElement('span');
+        span.textContent = key;
+        
+        // Susun ke dalam container div
+        div.appendChild(delBtn);
+        div.appendChild(img);
+        div.appendChild(span);
+        
         galleryGrid.appendChild(div);
       });
     }
-    
+  }
+
+  openFolderBtn.addEventListener('click', () => {
+    renderGallery();
     galleryModal.style.display = 'flex';
   });
+  
   closeFolderBtn.addEventListener('click', () => galleryModal.style.display = 'none');
 
   // --- FUNGSI EXPORT ZIP ---
